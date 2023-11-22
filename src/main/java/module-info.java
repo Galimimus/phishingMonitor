@@ -1,6 +1,9 @@
 module com.galimimus.phishingmonitor {
     requires javafx.controls;
     requires javafx.fxml;
+    requires mysql.connector.java;
+    requires java.sql;
+    requires java.naming;
 
 
     opens com.galimimus.phishingmonitor to javafx.fxml;
