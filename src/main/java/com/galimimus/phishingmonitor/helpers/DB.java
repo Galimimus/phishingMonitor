@@ -3,15 +3,16 @@ package com.galimimus.phishingmonitor.helpers;
 import com.galimimus.phishingmonitor.models.Department;
 import com.galimimus.phishingmonitor.models.Employee;
 import com.galimimus.phishingmonitor.models.User;
-import com.mysql.cj.MysqlConnection;
 import com.mysql.cj.jdbc.MysqlDataSource;
-import com.mysql.jdbc.Driver;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class DB {
@@ -35,7 +36,7 @@ public class DB {
     }
 
     public  User getMe(int user_id) {
-        User user;
+        User user = null;
         try {
             String query = "SELECT name, email, company FROM users WHERE id = " + user_id;
             if(!connection.isClosed()){
@@ -46,13 +47,12 @@ public class DB {
                     String email = result.getString("email");
                     String company = result.getString("company");
                     user = new User(name, email, company);
-                    return user;//TODO: переделать возврат по божески
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
+        return user;
     }
 
     public void close() {
@@ -95,25 +95,76 @@ public class DB {
         return username;
     }
 
-    public ArrayList<Employee> getEmployees() {
-        ArrayList<Employee> employees = new ArrayList<>();
+    public HashMap<String, ArrayList<Employee>> getEmployees() {
+        HashMap<String, ArrayList<Employee>> departments = new HashMap<>();
+        try {
+            //String query = "SELECT employees.name, employees.ip, employees.raiting, employees.email, departments.name" +
+            //        "FROM employees LEFT JOIN departments ON employees.department_id = departments.id ORDER BY departments.name ASC";
+            String query = "SELECT * FROM departments";
+            if(!connection.isClosed()){
+                Statement statement = connection.createStatement();
+                ResultSet result_dep = statement.executeQuery(query);
+                while (result_dep.next()) {
+                    //Department department = new Department(result.getString(5));
+                    query = "SELECT id, name FROM employees WHERE department_id = " + result_dep.getInt(1);
+                    statement = connection.createStatement();
+                    ResultSet result_emp = statement.executeQuery(query);
+                    ArrayList<Employee> employees = new ArrayList<>();
+                    while (result_emp.next()) {
+                        Employee employee = new Employee(result_emp.getInt(1), result_emp.getString(2));
+                        employees.add(employee);
+                    }
+                    //System.out.println("\n"+result_dep.getString(1) + result_dep.getString(2)+"\n");
+                    departments.put(result_dep.getString(2), employees);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return departments;
+    }
+
+    public Employee getEmployee(String emp_id) {
+        Employee emp = null;
+        Pattern pattern = Pattern.compile("\\d+");
+        Matcher matcher = pattern.matcher(emp_id);
+        String id = "";
+        while (matcher.find()) {
+            id = matcher.group();
+        }
         try {
             String query = "SELECT employees.name, employees.ip, employees.raiting, employees.email, departments.name" +
-                    "FROM employees LEFT JOIN departments ON employees.department_id = departments.id";
+                    " FROM employees LEFT JOIN departments ON employees.department_id = departments.id WHERE employees.id = " + id;
+
             if(!connection.isClosed()){
                 Statement statement = connection.createStatement();
                 ResultSet result = statement.executeQuery(query);
                 while (result.next()) {
                     Department department = new Department(result.getString(5));
-                    Employee employee = new Employee(result.getString(1), result.getString(2), result.getInt(3),
-                            result.getString(4), department);
-                    employees.add(employee);
+                    emp = new Employee(result.getString(1), result.getString(2), result.getInt(3), result.getString(4), department);
                 }
-                return employees;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return employees;
+        return emp;
+    }
+
+    public ArrayList<Department> getDepartments() {
+        ArrayList<Department> deps = new ArrayList<>();
+        String query = "SELECT * FROM departments";
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                ResultSet result_dep = statement.executeQuery(query);
+                while (result_dep.next()) {
+                    Department department = new Department(result_dep.getString(2));
+                    deps.add(department);
+                }
+            }
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        return deps;
     }
 }
