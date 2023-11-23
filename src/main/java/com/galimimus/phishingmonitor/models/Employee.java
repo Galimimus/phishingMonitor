@@ -70,6 +70,11 @@ public class Employee {
         this.name = name;
     }
 
+    public Employee(String ip, String email) {
+        this.email = email;
+        this.ip = ip;
+    }
+
     public String getName() {
         return name;
     }

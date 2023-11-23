@@ -1,8 +1,10 @@
 package com.galimimus.phishingmonitor.controllers;
 
 import com.galimimus.phishingmonitor.helpers.DB;
+import com.galimimus.phishingmonitor.helpers.Validation;
 import com.galimimus.phishingmonitor.models.Department;
 import com.galimimus.phishingmonitor.models.Employee;
+import com.galimimus.phishingmonitor.mailings.Mailing;
 import com.galimimus.phishingmonitor.models.User;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -16,12 +18,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 
+import javax.mail.MessagingException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.regex.Pattern;
+
+
+
 
 
 public class MainPageController {
@@ -154,13 +160,63 @@ public class MainPageController {
         Button btn0 = new Button("Начать рассылку");
         TextField field0 = new TextField();//email
         TextField field1 = new TextField();//theme
-        TextField field2 = new TextField();//hyperlink word
+        Button btn1 = new Button("Вставить гиперссылку");//hyperlink word
+        btn1.setDisable(true);
+        btn1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                mail_text.appendText("<a href=\"\">Отображаемый текст</a>");
+            }
+        });
+
         CheckBox check0 = new CheckBox();//exe
         check0.setText("сгенерировать exe");
+
         CheckBox check1 = new CheckBox();//qr
         check1.setText("сгенерировать QR");
         CheckBox check2 = new CheckBox();//url\
         check2.setText("сгенерировать URL");
+
+        check0.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if(check0.isSelected()) {
+                    check1.setDisable(true);
+                    check2.setDisable(true);
+                }else{
+                    check1.setDisable(false);
+                    check2.setDisable(false);
+                }
+            }
+        });
+
+        check1.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if(check1.isSelected()) {
+                    check0.setDisable(true);
+                    check2.setDisable(true);
+                }else{
+                    check0.setDisable(false);
+                    check2.setDisable(false);
+                }
+            }
+        });
+
+        check2.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if(check2.isSelected()) {
+                    check0.setDisable(true);
+                    check1.setDisable(true);
+                    btn1.setDisable(false);
+                }else{
+                    check0.setDisable(false);
+                    check1.setDisable(false);
+                    btn1.setDisable(true);
+                }
+            }
+        });
         ComboBox<String> combo = new ComboBox<>();//groups
         combo.getItems().add("все");
         db.connect();
@@ -184,7 +240,7 @@ public class MainPageController {
         mail_settings.getChildren().add(check1);
         mail_settings.getChildren().add(check2);
         mail_settings.getChildren().add(label5);
-        mail_settings.getChildren().add(field2);
+        mail_settings.getChildren().add(btn1);
         mail_settings.getChildren().add(label6);
         mail_settings.getChildren().add(btn0);
         mail_settings.getChildren().add(progress);
@@ -192,16 +248,48 @@ public class MainPageController {
         btn0.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                if(!Objects.equals(mail_text.getText(), "") && (check0.isSelected() ||
-                        check1.isSelected() || check2.isSelected()) && combo.getValue() != null
-                && !Objects.equals(field0.getText(), "")){
-                    if(check0.isSelected()) {//TODO: ЭТО ЖУТКИЕ КОСТЫЛИ!!! ПЕРЕДЕЛАТЬ!!!
-                        //PrepareMail(mail_text, check0, combo.getValue(), field0.getText(), );
-                    }
-                }else{
+                Mailing m = new Mailing();
+                try {
+                    System.out.println("message call");
+                    Mailing.Send();
+                } catch (MessagingException e) {
+                    throw new RuntimeException(e);
+                }
+                String text = mail_text.getText();
+                String recipients = combo.getValue();
+                String theme = field1.getText();
+                String email = field0.getText();
+                if(Validation.isNullOrEmpty(text) || Validation.isNullOrEmpty(recipients) || Validation.isNullOrEmpty(email)){
                     label6.setVisible(true);
                     label6.setText("Заполните необходимые поля");
+                    return;
                 }
+                if (Validation.validatePattern(email, Pattern.compile("^[_A-Za-z0-9]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"))) {
+                    label6.setVisible(true);
+                    label6.setText("Email имеет недопустимый формат");
+                    return;
+                }
+                //final String username, final String password, String recipientEmail, String ccEmail, String title, String message
+                //xexe@vkpr.store
+
+
+                /*TestMailing tm = new TestMailing(text, recipients, theme, email);
+                if(check0.isSelected()){
+                    tm.StartEXEMailing();
+                    label6.setVisible(false);
+                    progress.setVisible(true);
+                }else if(check1.isSelected()){
+                    tm.StartQRMailing();
+                    label6.setVisible(false);
+                    progress.setVisible(true);
+                }else if(check2.isSelected()){
+                    tm.StartURLMailing();
+                    label6.setVisible(false);
+                    progress.setVisible(true);
+                }else{
+                    label6.setVisible(true);
+                    label6.setText("Выберите тип полезной нагрузки");
+                }*/
             }
         });
 
