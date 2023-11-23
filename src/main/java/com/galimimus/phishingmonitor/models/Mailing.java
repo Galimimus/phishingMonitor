@@ -11,7 +11,7 @@ public class Mailing {
     protected int total_used;
     protected final String mailing_name;
 
-    Mailing(ArrayList<Employee> recipients, String mailing_name){
+    public Mailing(ArrayList<Employee> recipients, String mailing_name){
 
         this.recipients = recipients;
         this.mailing_name = mailing_name;

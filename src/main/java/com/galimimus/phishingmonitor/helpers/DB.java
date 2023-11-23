@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -166,5 +167,31 @@ public class DB {
             throw new RuntimeException(e);
         }
         return deps;
+    }
+
+    public ArrayList<Employee> getRecipients(String recipients) {
+        ArrayList<Employee> employees = new ArrayList<>();
+        String query = "";
+        if(Validation.isNullOrEmpty(recipients)){
+            return null;// TODO: лог и обработка
+        }
+        if (Objects.equals(recipients, "все")){
+            query = "SELECT ip, email FROM employees";
+        }else {
+            query = "SELECT ip, email FROM employees LEFT JOIN departments ON employees.department_id = departments.id WHERE departments.name = " + recipients;
+        }
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery(query);
+                while (result.next()) {
+                    Employee emp = new Employee(result.getString(1),result.getString(2));
+                    employees.add(emp);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return employees;
     }
 }
