@@ -1,5 +1,6 @@
 package com.galimimus.phishingmonitor;
 
+import com.galimimus.phishingmonitor.server.HTTPServer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -15,6 +16,8 @@ public class StartApplication extends Application {
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
+        HTTPServer server = new HTTPServer();
+        server.startHttpServer();
     }
 
     public static void main(String[] args) {

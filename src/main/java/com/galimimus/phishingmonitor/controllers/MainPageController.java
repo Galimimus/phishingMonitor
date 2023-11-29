@@ -2,6 +2,8 @@ package com.galimimus.phishingmonitor.controllers;
 
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.Validation;
+import com.galimimus.phishingmonitor.mailings.QRMailing;
+import com.galimimus.phishingmonitor.mailings.URLMailing;
 import com.galimimus.phishingmonitor.models.Department;
 import com.galimimus.phishingmonitor.models.Employee;
 import com.galimimus.phishingmonitor.mailings.Mailing;
@@ -21,6 +23,7 @@ import javafx.scene.shape.Circle;
 import javax.mail.MessagingException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -227,7 +230,7 @@ public class MainPageController {
         }
         ProgressBar progress = new ProgressBar();//mailing
         progress.setVisible(false);
-        //TODO: доделать проверку заполнения полей
+        //TODO: доделать проверку заполнения полей. Кнопки и текстфилды для вставки картинки. Текстфилды для ввода email.
 
         mail_settings.getChildren().add(label0);
         mail_settings.getChildren().add(field1);
@@ -248,13 +251,14 @@ public class MainPageController {
         btn0.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
-                Mailing m = new Mailing();
+                /*Mailing m = new Mailing();
                 try {
                     System.out.println("message call");
                     Mailing.Send();
                 } catch (MessagingException e) {
                     throw new RuntimeException(e);
-                }
+                }*/
+
                 String text = mail_text.getText();
                 String recipients = combo.getValue();
                 String theme = field1.getText();
@@ -271,25 +275,30 @@ public class MainPageController {
                 }
                 //final String username, final String password, String recipientEmail, String ccEmail, String title, String message
                 //xexe@vkpr.store
+                // arkadijvasilevic42@gmail.com
+// rghn uyaa ieym tnid пароль приложений!!!
 
 
-                /*TestMailing tm = new TestMailing(text, recipients, theme, email);
-                if(check0.isSelected()){
-                    tm.StartEXEMailing();
+                if(check0.isSelected()){//exe
+                    Thread mailing  = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                    mailing.start();
                     label6.setVisible(false);
                     progress.setVisible(true);
                 }else if(check1.isSelected()){
-                    tm.StartQRMailing();
+
+                    Thread mailing  = new Thread(new QRMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                    mailing.start();
                     label6.setVisible(false);
                     progress.setVisible(true);
                 }else if(check2.isSelected()){
-                    tm.StartURLMailing();
+                    Thread mailing  = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                    mailing.start();
                     label6.setVisible(false);
                     progress.setVisible(true);
                 }else{
                     label6.setVisible(true);
                     label6.setText("Выберите тип полезной нагрузки");
-                }*/
+                }
             }
         });
 
