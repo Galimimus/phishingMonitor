@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -22,6 +23,7 @@ public class DB {
     private  String host = "localhost";
     private  String username = "galimimus";
     private  String password = "pass111";
+
     private  Connection connection;
     private  MysqlDataSource datasource = new MysqlDataSource();
     public void connect() {
@@ -173,12 +175,12 @@ public class DB {
         ArrayList<Employee> employees = new ArrayList<>();
         String query = "";
         if(Validation.isNullOrEmpty(recipients)){
-            return null;// TODO: лог и обработка
+            return null;// TODO: лог и обработка ФИЛЬТРАЦИЯ ЗАПОСА
         }
         if (Objects.equals(recipients, "все")){
             query = "SELECT ip, email FROM employees";
         }else {
-            query = "SELECT ip, email FROM employees LEFT JOIN departments ON employees.department_id = departments.id WHERE departments.name = " + recipients;
+            query = "SELECT ip, email FROM employees LEFT JOIN departments ON employees.department_id = departments.id WHERE departments.name = \"" + recipients + "\"";
         }
         try {
             if (!connection.isClosed()) {
@@ -193,5 +195,40 @@ public class DB {
             throw new RuntimeException(e);
         }
         return employees;
+    }
+
+    public ArrayList<String> getIPs() {
+        ArrayList<String> ips = new ArrayList<>();
+        String query = "SELECT ip FROM employees";
+
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery(query);
+                while (result.next()) {
+                    String ip = result.getString(1);
+                    ips.add(ip);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return ips;
+    }
+
+    public void logIP(String ip) {
+        //insert into employees (name, ip, email, department_id) values ("neya", "44.44.44.44", "ksu.zdankina@gmail.com", 3);
+        //Date date = new Date();
+        String query = "INSERT INTO last_mailing (time_of_use, used_ip) VALUES (NOW(), \""+ip+"\")";//TODO: НЕ РАБОТАЕТ С DATE, НАДО ПОНЯТЬ ПОЧЕМУ, НО ЭТО В ПОСЛЕДНЮЮ ОЧЕРЕДЬ
+
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                int result = statement.executeUpdate(query);
+                System.out.println("result = " + result);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
