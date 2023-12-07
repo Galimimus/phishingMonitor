@@ -1,5 +1,7 @@
 package com.galimimus.phishingmonitor.mailings;
 
+import com.galimimus.phishingmonitor.StartApplication;
+import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.models.Employee;
 
 import javax.mail.Message;
@@ -7,35 +9,44 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 
 public class URLMailing extends Mailing implements Runnable{
+
     public URLMailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {
         super(text, recipients, theme, from_email, from_pass, smtp_server, port);
     }
 
     @Override
     public void run() {
-        System.out.println("mailing started");//TODO: Запись инфы в бд и файл лога
+        log.logp(Level.INFO, "URLMailing", "run", "Starting url mailing");
+        DB db = new DB();
+        db.connect();
+        mailing_id = db.getLastMailingId();
+        mailing_id++;
+        db.close();
+        int total_sent = 0;
         for (Employee emp : employees){
             PrepareMail(emp);
-            System.out.println(emp.getEmail());
             try {
-                System.out.println("Thread sleeps");
                 Thread.sleep(15);
-                System.out.println("Thread awake");
             } catch (InterruptedException e) {
+                log.logp(Level.SEVERE, "URLMailing", "run", e.toString());
                 throw new RuntimeException(e);
             }
-
-
             Send(emp.getEmail());
-            System.out.println("mailing continuing");
+            total_sent++;
         }
-        System.out.println("mailing done");
+        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getID(), total_sent);
+        db.connect();
+        db.logMailing(mailing);
+        db.close();
+        log.logp(Level.INFO, "URLMailing", "run", "Url mailing done. Total messages sent = " + total_sent);
     }
 
     private void PrepareMail(Employee emp){
@@ -45,8 +56,8 @@ public class URLMailing extends Mailing implements Runnable{
         Matcher matcher = pattern.matcher(text);
         String tmp_text = text;
         while (matcher.find()) {
-            StringBuffer sb = new StringBuffer(text);
-            sb.insert(matcher.end(),url_base+createToken(emp.getIP()));
+            StringBuilder sb = new StringBuilder(text);
+            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+createToken(emp.getIP(), emp.getDepartment().getID())+URL_MAIL_PART+mailing_id);
             tmp_text = String.valueOf(sb);
         }
         try {
@@ -55,9 +66,9 @@ public class URLMailing extends Mailing implements Runnable{
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(emp.getEmail()));
 
         } catch (MessagingException e) {
+            log.logp(Level.SEVERE, "URLMailing", "PrepareMail", e.toString());
             throw new RuntimeException(e);
         }
-        System.out.println("Preparing done");
-
+        log.logp(Level.INFO, "URLMailing", "PrepareMail", "Preparing mail for " + emp.getEmail() + " done.");
     }
 }

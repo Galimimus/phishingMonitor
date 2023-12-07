@@ -1,6 +1,5 @@
 package com.galimimus.phishingmonitor.models;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
@@ -8,8 +7,8 @@ public class LastMailing extends Mailing{
 
     private HashMap<String, Calendar> used_ips;
 
-    LastMailing(ArrayList<Employee> recipients, String mailing_name) {
-        super(recipients, mailing_name);
+    LastMailing(int dep_id, int total_sent) {
+        super(dep_id, total_sent);
     }
 
     public void add_toUsed_ips(String ip){

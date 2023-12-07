@@ -1,7 +1,9 @@
 package com.galimimus.phishingmonitor.controllers;
 
+import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.Validation;
+import com.galimimus.phishingmonitor.mailings.EXEMailing;
 import com.galimimus.phishingmonitor.mailings.QRMailing;
 import com.galimimus.phishingmonitor.mailings.URLMailing;
 import com.galimimus.phishingmonitor.models.Department;
@@ -27,6 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 
@@ -38,13 +42,14 @@ public class MainPageController {
     private AnchorPane Content;
     private AnchorPane HelpContent = new AnchorPane();
     DB db = new DB();
-
+    static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
 
     @FXML
     protected void MeOnClick() throws FileNotFoundException {
         //TODO: доделать вывод информации о HTTP сервере, скрыть пароль при выводе, добавить кнопку, которая позволяет увидеть
-        //TODO: ПКМ по textarea - редактировать?
+        //TODO: ПКМ по textarea - редактировать?                        | сделать действия на клик по textarea
+        //TODO: кнопки для запуска/остановки/рестарта сервака, ПКМ??    | потом
         Content.getChildren().clear();
         db.connect();
         User user = db.getMe(1);
@@ -112,12 +117,7 @@ public class MainPageController {
                 Button btn = new Button(emp.getName());
                 btn.setId("emp"+emp.getId());
                 btn.setMinWidth(p_content.getMinWidth());
-                btn.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent actionEvent) {
-                        EmployeeInfoOnClick(btn.getId());
-                    }
-                });
+                btn.setOnAction(actionEvent -> EmployeeInfoOnClick(btn.getId()));
                 p_content.getChildren().add(btn);
 
             }
@@ -165,12 +165,7 @@ public class MainPageController {
         TextField field1 = new TextField();//theme
         Button btn1 = new Button("Вставить гиперссылку");//hyperlink word
         btn1.setDisable(true);
-        btn1.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                mail_text.appendText("<a href=\"\">Отображаемый текст</a>");
-            }
-        });
+        btn1.setOnAction(actionEvent -> mail_text.appendText("<a href=\"\">Отображаемый текст</a>"));
 
         CheckBox check0 = new CheckBox();//exe
         check0.setText("сгенерировать exe");
@@ -180,44 +175,37 @@ public class MainPageController {
         CheckBox check2 = new CheckBox();//url\
         check2.setText("сгенерировать URL");
 
-        check0.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(check0.isSelected()) {
-                    check1.setDisable(true);
-                    check2.setDisable(true);
-                }else{
-                    check1.setDisable(false);
-                    check2.setDisable(false);
-                }
+        check0.setOnAction(actionEvent -> {
+            if (check0.isSelected()) {
+                check1.setDisable(true);
+                check2.setDisable(true);
+                btn1.setDisable(false);
+            } else {
+                check1.setDisable(false);
+                check2.setDisable(false);
+                btn1.setDisable(true);
             }
         });
 
-        check1.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(check1.isSelected()) {
-                    check0.setDisable(true);
-                    check2.setDisable(true);
-                }else{
-                    check0.setDisable(false);
-                    check2.setDisable(false);
-                }
+        check1.setOnAction(actionEvent -> {
+            if (check1.isSelected()) {
+                check0.setDisable(true);
+                check2.setDisable(true);
+            } else {
+                check0.setDisable(false);
+                check2.setDisable(false);
             }
         });
 
-        check2.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if(check2.isSelected()) {
-                    check0.setDisable(true);
-                    check1.setDisable(true);
-                    btn1.setDisable(false);
-                }else{
-                    check0.setDisable(false);
-                    check1.setDisable(false);
-                    btn1.setDisable(true);
-                }
+        check2.setOnAction(actionEvent -> {
+            if (check2.isSelected()) {
+                check0.setDisable(true);
+                check1.setDisable(true);
+                btn1.setDisable(false);
+            } else {
+                check0.setDisable(false);
+                check1.setDisable(false);
+                btn1.setDisable(true);
             }
         });
         ComboBox<String> combo = new ComboBox<>();//groups
@@ -228,8 +216,7 @@ public class MainPageController {
         for(Department dep : deps){
             combo.getItems().add(dep.getName());
         }
-        ProgressBar progress = new ProgressBar();//mailing
-        progress.setVisible(false);
+
         //TODO: доделать проверку заполнения полей. Кнопки и текстфилды для вставки картинки. Текстфилды для ввода email.
 
         mail_settings.getChildren().add(label0);
@@ -246,59 +233,55 @@ public class MainPageController {
         mail_settings.getChildren().add(btn1);
         mail_settings.getChildren().add(label6);
         mail_settings.getChildren().add(btn0);
-        mail_settings.getChildren().add(progress);
 
-        btn0.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                /*Mailing m = new Mailing();
-                try {
-                    System.out.println("message call");
-                    Mailing.Send();
-                } catch (MessagingException e) {
-                    throw new RuntimeException(e);
-                }*/
+        btn0.setOnAction(actionEvent -> {
+            /*Mailing m = new Mailing();
+            try {
+                System.out.println("message call");
+                Mailing.Send();
+            } catch (MessagingException e) {
+                throw new RuntimeException(e);
+            }*/
 
-                String text = mail_text.getText();
-                String recipients = combo.getValue();
-                String theme = field1.getText();
-                String email = field0.getText();
-                if(Validation.isNullOrEmpty(text) || Validation.isNullOrEmpty(recipients) || Validation.isNullOrEmpty(email)){
-                    label6.setVisible(true);
-                    label6.setText("Заполните необходимые поля");
-                    return;
-                }
-                if (Validation.validatePattern(email, Pattern.compile("^[_A-Za-z0-9]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"))) {
-                    label6.setVisible(true);
-                    label6.setText("Email имеет недопустимый формат");
-                    return;
-                }
-                //final String username, final String password, String recipientEmail, String ccEmail, String title, String message
-                //xexe@vkpr.store
-                // arkadijvasilevic42@gmail.com
+            String text = mail_text.getText();
+            String recipients = combo.getValue();
+            String theme = field1.getText();
+            String email = field0.getText();
+            if (Validation.isNullOrEmpty(text) || Validation.isNullOrEmpty(recipients) || Validation.isNullOrEmpty(email)) {
+                label6.setVisible(true);
+                label6.setText("Заполните необходимые поля");
+                return;
+            }
+            if (Validation.validatePattern(email, Pattern.compile("^[_A-Za-z0-9]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"))) {
+                label6.setVisible(true);
+                label6.setText("Email имеет недопустимый формат");
+                return;
+            }
+            //final String username, final String password, String recipientEmail, String ccEmail, String title, String message
+            //xexe@vkpr.store
+            // arkadijvasilevic42@gmail.com
 // rghn uyaa ieym tnid пароль приложений!!!
 
 
-                if(check0.isSelected()){//exe
-                    Thread mailing  = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
-                    mailing.start();
-                    label6.setVisible(false);
-                    progress.setVisible(true);
-                }else if(check1.isSelected()){
+            if (check0.isSelected()) {//exe
+                Thread mailing = new Thread(new EXEMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                mailing.start();
+                label6.setVisible(false);
+                btn0.setDisable(true);
+            } else if (check1.isSelected()) {
 
-                    Thread mailing  = new Thread(new QRMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
-                    mailing.start();
-                    label6.setVisible(false);
-                    progress.setVisible(true);
-                }else if(check2.isSelected()){
-                    Thread mailing  = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
-                    mailing.start();
-                    label6.setVisible(false);
-                    progress.setVisible(true);
-                }else{
-                    label6.setVisible(true);
-                    label6.setText("Выберите тип полезной нагрузки");
-                }
+                Thread mailing = new Thread(new QRMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                mailing.start();
+                label6.setVisible(false);
+                btn0.setDisable(true);
+            } else if (check2.isSelected()) {
+                Thread mailing = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                mailing.start();
+                label6.setVisible(false);
+                btn0.setDisable(true);
+            } else {
+                label6.setVisible(true);
+                label6.setText("Выберите тип полезной нагрузки");
             }
         });
 
@@ -313,12 +296,13 @@ public class MainPageController {
         AnchorPane.setLeftAnchor(HelpContent, 180d);
 
             db.connect();
-            Employee emp = db.getEmployee(id);
+            Employee emp = db.getEmployee(id.substring(3));
             db.close();
-            Image img = null;
+            Image img;
             try {
                 img = new Image(new FileInputStream("src/main/resources/com/galimimus/phishingmonitor/default_person.jpg"));
             } catch (FileNotFoundException e) {
+                log.logp(Level.SEVERE, "MainPageController", "EmployeeInfoOnClick", e.toString());
                 throw new RuntimeException(e);
             }
 
@@ -335,7 +319,6 @@ public class MainPageController {
             AnchorPane.setLeftAnchor(name, 140d);
 
             Label email = new Label(emp.getEmail());
-            System.out.println(emp.getEmail());
             AnchorPane.setTopAnchor(email, 60d);
             AnchorPane.setLeftAnchor(email, 140d);
 

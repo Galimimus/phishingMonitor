@@ -58,7 +58,7 @@ public class Employee {
         this.ip = ip;
         this.email = email;
     }
-    Employee(String name, String ip, String email){
+    public Employee(String name, String ip, String email){
         //TODO: проверить данные перед присвоением, как минимум ip
         this.name = name;
         this.ip = ip;
@@ -73,6 +73,12 @@ public class Employee {
     public Employee(String ip, String email) {
         this.email = email;
         this.ip = ip;
+    }
+
+    public Employee(String ip, String email, Department department) {
+        this.email = email;
+        this.ip = ip;
+        this.department = department;
     }
 
     public String getName() {

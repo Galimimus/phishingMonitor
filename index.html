@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<document>
+    <head>
+        <script>
+            var currentURL = window.location.href;
+            if (currentURL.includes("secure")) {
+                var newURL = currentURL.replace("secure", "log");
+                window.location.href = newURL;
+            }
+        </script>
+    </head>
+    <body>
+    <h1>Hello!</h1>
+    </body>
+</document>

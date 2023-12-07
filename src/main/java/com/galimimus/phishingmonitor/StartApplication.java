@@ -7,6 +7,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 public class StartApplication extends Application {
     @Override
@@ -18,6 +22,12 @@ public class StartApplication extends Application {
         stage.show();
         HTTPServer server = new HTTPServer();
         server.startHttpServer();
+        try {
+            LogManager.getLogManager().readConfiguration(
+                    StartApplication.class.getResourceAsStream("logging.properties"));
+        } catch (IOException e) {
+            System.err.println("Could not setup logger configuration: " + e.toString());
+        }
     }
 
     public static void main(String[] args) {

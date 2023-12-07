@@ -1,41 +1,44 @@
 package com.galimimus.phishingmonitor.models;
 
-import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.Date;
 
 public class Mailing {
     protected int id;
     protected Calendar time;
-    protected final ArrayList<Employee> recipients;
+
+    protected int dep_id;
     protected int total_sent;
     protected int total_used;
-    protected final String mailing_name;
 
-    public Mailing(ArrayList<Employee> recipients, String mailing_name){
+    public Mailing(int dep_id, int total_sent){
 
-        this.recipients = recipients;
-        this.mailing_name = mailing_name;
+        this.dep_id = dep_id;
         time = Calendar.getInstance();
+        this.total_sent = total_sent;
 
     }
 
-    public String getMailing_name() {
-        return mailing_name;
+
+    public long getTime() {
+        return time.getTimeInMillis();
     }
 
-    public Calendar getTime() {
-        return time;
-    }
-
-    public ArrayList<Employee> getRecipients() {
-        return recipients;
-    }
 
     public int getTotal_used() {
         return total_used;
     }
+    public void setTotal_used(int total_used) {
+        this.total_used = total_used;
+    }
+
 
     public int getTotal_sent() {
         return total_sent;
+    }
+
+    public int getDep_id() {
+        return dep_id;
     }
 }
