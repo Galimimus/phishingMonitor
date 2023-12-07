@@ -2,6 +2,7 @@ package com.galimimus.phishingmonitor.controllers;
 
 import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.helpers.Validation;
 import com.galimimus.phishingmonitor.mailings.EXEMailing;
 import com.galimimus.phishingmonitor.mailings.QRMailing;
@@ -26,9 +27,12 @@ import javax.mail.MessagingException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -41,24 +45,33 @@ public class MainPageController {
     @FXML
     private AnchorPane Content;
     private AnchorPane HelpContent = new AnchorPane();
-    DB db = new DB();
+    final DB db = new DB();
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
 
     @FXML
     protected void MeOnClick() throws FileNotFoundException {
-        //TODO: доделать вывод информации о HTTP сервере, скрыть пароль при выводе, добавить кнопку, которая позволяет увидеть
+        //TODO: скрыть пароль при выводе, добавить кнопку, которая позволяет увидеть
         //TODO: ПКМ по textarea - редактировать?                        | сделать действия на клик по textarea
         //TODO: кнопки для запуска/остановки/рестарта сервака, ПКМ??    | потом
         Content.getChildren().clear();
         db.connect();
         User user = db.getMe(1);
-        TextArea bd_info = new TextArea("Особенности подключения к базе данных:\n username: " + db.getUsername() +
-                "\n password: " + db.getPassword() + "\n host: " + db.getHost() + "\ndatabase name: " + db.getDb_name());
         db.close();
-        TextArea server_info = new TextArea("Особенности настройки HTTP сервера:\n");
+        SettingsSingleton ss = SettingsSingleton.getInstance();
+        TextArea bd_info = new TextArea("Особенности подключения к базе данных:\nusername: " + ss.getDB_USERNAME() +
+                "\npassword: " + ss.getDB_PASS() + "\nhost: " + ss.getDB_HOST() + "\ndatabase name: " + ss.getDB_NAME());
 
-        Image img = new Image(new FileInputStream("/home/galimimus/IdeaProjects/phishingMonitor/src/main/resources/com/galimimus/phishingmonitor/default_person.jpg"));
+        TextArea server_info = new TextArea("Особенности настройки HTTP сервера:\nhost: " + ss.getHTTP_SERVER_HOST()
+                +"\nport: " + ss.getHTTP_SERVER_PORT()+"\nlog employee url: "+ "http://"+ss.getHTTP_SERVER_HOST()
+                +":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_URL_HANDLE()+
+                "\ndownload file url: "+ "http://"+ss.getHTTP_SERVER_HOST()
+                +":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_DOWNLOAD_HANDLE()+
+                "\nbypass mail check url: "+ "http://"+ss.getHTTP_SERVER_HOST()
+                +":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_EXE_HANDLE());
+
+        Image img = null;
+        img = new Image(Objects.requireNonNull(StartApplication.class.getResourceAsStream("default_person.jpg")));
 
         ImageView image = new ImageView(img);
         image.setFitHeight(80);
@@ -235,13 +248,6 @@ public class MainPageController {
         mail_settings.getChildren().add(btn0);
 
         btn0.setOnAction(actionEvent -> {
-            /*Mailing m = new Mailing();
-            try {
-                System.out.println("message call");
-                Mailing.Send();
-            } catch (MessagingException e) {
-                throw new RuntimeException(e);
-            }*/
 
             String text = mail_text.getText();
             String recipients = combo.getValue();
@@ -257,28 +263,20 @@ public class MainPageController {
                 label6.setText("Email имеет недопустимый формат");
                 return;
             }
-            //final String username, final String password, String recipientEmail, String ccEmail, String title, String message
-            //xexe@vkpr.store
-            // arkadijvasilevic42@gmail.com
-// rghn uyaa ieym tnid пароль приложений!!!
 
-
+            SettingsSingleton ss = SettingsSingleton.getInstance();
             if (check0.isSelected()) {//exe
-                Thread mailing = new Thread(new EXEMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                Thread mailing = new Thread(new EXEMailing(text, recipients, theme));
                 mailing.start();
                 label6.setVisible(false);
-                btn0.setDisable(true);
             } else if (check1.isSelected()) {
-
-                Thread mailing = new Thread(new QRMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                Thread mailing = new Thread(new QRMailing(text, recipients, theme));
                 mailing.start();
                 label6.setVisible(false);
-                btn0.setDisable(true);
             } else if (check2.isSelected()) {
-                Thread mailing = new Thread(new URLMailing(text, recipients, theme, "arkadijvasilevic42@gmail.com", "rghn uyaa ieym tnid", "smtp.gmail.com", 465));
+                Thread mailing = new Thread(new URLMailing(text, recipients, theme));
                 mailing.start();
                 label6.setVisible(false);
-                btn0.setDisable(true);
             } else {
                 label6.setVisible(true);
                 label6.setText("Выберите тип полезной нагрузки");
@@ -322,7 +320,7 @@ public class MainPageController {
             AnchorPane.setTopAnchor(email, 60d);
             AnchorPane.setLeftAnchor(email, 140d);
 
-            Label ip = new Label(emp.getIP());
+            Label ip = new Label(emp.getIp());
             AnchorPane.setTopAnchor(ip, 90d);
             AnchorPane.setLeftAnchor(ip, 140d);
 

@@ -2,6 +2,7 @@ package com.galimimus.phishingmonitor.mailings;
 
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.EXEGenerator;
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.models.Employee;
 
 import javax.mail.Message;
@@ -9,6 +10,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,8 +18,8 @@ import java.util.regex.Pattern;
 import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 
 public class EXEMailing extends Mailing implements Runnable{
-    public EXEMailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {
-        super(text, recipients, theme, from_email, from_pass, smtp_server, port);
+    public EXEMailing(String text, String recipients, String theme) {
+        super(text, recipients, theme);
     }
 
     @Override
@@ -36,8 +38,8 @@ public class EXEMailing extends Mailing implements Runnable{
     EXEGenerator exe_gen = new EXEGenerator();
 
     for (Employee emp : employees){
-    String filename = createToken(emp.getIP(), emp.getDepartment().getID())+"\u202excod.exe";//docx
-    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+createToken(emp.getIP(), emp.getDepartment().getID())+URL_MAIL_PART+mailing_id);
+    String filename = "Document_"+Calendar.getInstance().getTimeInMillis();//+"\u202excod.exe";//docx
+    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
     PrepareMail(emp, filename);
 
     try {
@@ -49,7 +51,7 @@ public class EXEMailing extends Mailing implements Runnable{
     Send(emp.getEmail());
     total_sent++;
     }
-    com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getID(), total_sent);
+    com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
         db.connect();
         db.logMailing(mailing);
         db.close();
@@ -59,12 +61,12 @@ public class EXEMailing extends Mailing implements Runnable{
     private void PrepareMail(Employee emp, String filename){
         session = Session.getDefaultInstance(props);
         message = new MimeMessage(session);
-        Pattern pattern = Pattern.compile("<a href=\"");
+        Pattern pattern = Pattern.compile("<a href=");
         Matcher matcher = pattern.matcher(text);
         String tmp_text = text;
         while (matcher.find()) {
             StringBuilder sb = new StringBuilder(text);
-            sb.insert(matcher.end(),URL_DOWNLOAD+filename);
+            sb.insert(matcher.end(),URL_DOWNLOAD+filename );
             tmp_text = String.valueOf(sb);
         }
         try {

@@ -2,6 +2,7 @@ package com.galimimus.phishingmonitor.mailings;
 
 import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.helpers.Validation;
 import com.galimimus.phishingmonitor.models.Employee;
 import com.galimimus.phishingmonitor.server.HTTPServer;
@@ -17,35 +18,34 @@ import java.util.regex.Pattern;
 
 import javax.mail.Session;
 public class Mailing{
-    protected String text;
+    protected final String text;
     protected ArrayList<Employee> employees = new ArrayList<>();//constructor email + ip
-    protected String theme;
-    protected String host;
-    protected int port;
-    protected String URL_BASE = "http://localhost:8000/loh?";
-    protected String URL_DOWNLOAD = "http://localhost:8000/log?file=";
-    protected String URL_TOKEN_PART = "token=";
-    protected String URL_MAIL_PART = "&mail=";
+    protected final String theme;
+    protected final String host;
+    protected final int port;
+    protected final String URL_BASE = "http://192.168.3.4:8000/loh?";
+    protected final String URL_DOWNLOAD = "http://192.168.3.4:8000/secure?file=";
+    protected final String URL_TOKEN_PART = "token=";
+    protected final String URL_MAIL_PART = "&mail=";
     protected int mailing_id;
-    protected Path exe_generated = Path.of("dropper/x\u202egpj.exe");
-    protected String from_email;
-    protected String from_pass;
-    protected Properties props;
+    protected final String from_email;
+    protected final String from_pass;
+    protected final Properties props;
     protected Session session;
     protected MimeMessage message;
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
-
-    public Mailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {//TODO: Проверка????
-        this.from_email = from_email;
-        this.from_pass = from_pass;
+    public Mailing(String text, String recipients, String theme) {
+        SettingsSingleton ss = SettingsSingleton.getInstance();
+        this.from_email = ss.getUSER_EMAIL();
+        this.from_pass = ss.getUSER_APP_PASS();
         this.text = text.replace("\n", "<br/>");
         employees = getRecipientsInfo(recipients);
         this.theme = theme;
-        host = smtp_server;
-        this.port = port;
+        host = ss.getMAIL_SMTP_SERVER();
+        this.port = ss.getMAIL_SMTP_PORT();
         props = new Properties();
         props.put("mail.transport.protocol", "smtps");
-        props.put("mail.smtps.host", smtp_server);//"smtp.gmail.com"
+        props.put("mail.smtps.host", host);//"smtp.gmail.com"
         props.put("mail.smtps.auth", "true");
         props.put("mail.smtp.sendpartial", "true");
     }

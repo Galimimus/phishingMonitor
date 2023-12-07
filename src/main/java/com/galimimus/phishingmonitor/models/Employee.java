@@ -1,5 +1,8 @@
 package com.galimimus.phishingmonitor.models;
 
+import lombok.Getter;
+
+@Getter
 public class Employee {
     int id;
     String name;
@@ -81,27 +84,4 @@ public class Employee {
         this.department = department;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Department getDepartment() {
-        return department;
-    }
-
-    public String getIP() {
-        return ip;
-    }
-
-    public int getRaiting() {
-        return raiting;
-    }
 }

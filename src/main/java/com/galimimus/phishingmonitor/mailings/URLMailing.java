@@ -18,8 +18,8 @@ import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 
 public class URLMailing extends Mailing implements Runnable{
 
-    public URLMailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {
-        super(text, recipients, theme, from_email, from_pass, smtp_server, port);
+    public URLMailing(String text, String recipients, String theme) {
+        super(text, recipients, theme);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class URLMailing extends Mailing implements Runnable{
             Send(emp.getEmail());
             total_sent++;
         }
-        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getID(), total_sent);
+        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
         db.connect();
         db.logMailing(mailing);
         db.close();
@@ -57,7 +57,7 @@ public class URLMailing extends Mailing implements Runnable{
         String tmp_text = text;
         while (matcher.find()) {
             StringBuilder sb = new StringBuilder(text);
-            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+createToken(emp.getIP(), emp.getDepartment().getID())+URL_MAIL_PART+mailing_id);
+            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
             tmp_text = String.valueOf(sb);
         }
         try {

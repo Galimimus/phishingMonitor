@@ -6,6 +6,7 @@ import com.galimimus.phishingmonitor.models.Employee;
 import com.galimimus.phishingmonitor.models.Mailing;
 import com.galimimus.phishingmonitor.models.User;
 import com.mysql.cj.jdbc.MysqlDataSource;
+import lombok.Setter;
 
 import java.sql.*;
 import java.util.*;
@@ -16,14 +17,22 @@ import java.util.regex.Pattern;
 
 public class DB {
 
-    private  String db_name = "monitor";
-    private  String host = "localhost";
-    private  String username = "galimimus";
-    private  String password = "pass111";
+    private final String db_name;
+    private final String host;
+    private final String username;
+    private final String password;
 
     private  Connection connection;
     private final MysqlDataSource datasource = new MysqlDataSource();
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
+
+    public DB(){
+        SettingsSingleton ss = SettingsSingleton.getInstance();
+        db_name = ss.getDB_NAME();
+        host = ss.getDB_HOST();
+        username = ss.getDB_USERNAME();
+        password = ss.getDB_PASS();
+    }
     public void connect() {
             datasource.setPassword(password);
             datasource.setUser(username);
@@ -69,38 +78,6 @@ public class DB {
             log.logp(Level.SEVERE, "DB","close", e.toString());
             throw new RuntimeException(e);
         }
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public  void setHost(String host) {
-        this.host = host;
-    }
-
-    public void setUrl(String db_name) {
-        this.db_name = db_name;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getDb_name() {
-        return db_name;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public HashMap<String, ArrayList<Employee>> getEmployees() {
@@ -328,7 +305,7 @@ public class DB {
     }
 
     public void IncrementTotalUsed(int mailing_id) {
-        String query = "UPDATE mailing SET total_used = total_used + 1 WHERE id="+mailing_id;
+        String query = "UPDATE mailings SET total_used = total_used + 1 WHERE id="+mailing_id;
 
         try {
             if (!connection.isClosed()) {
@@ -366,16 +343,10 @@ public class DB {
     }
 }
 //TODO:
-// Сделать второе окно для настройки дроппера,
-// написать дроппер,
-// конфиги для дроппера,
-// конфиги для бд,
-// конфиги для сервера.
 // Настроить ПКМ,
 // добавление в бд сотрудников и отделов.
 // Вычисление статистики и ее показ в окне.
 // Вывод прошедших рассылок в окне.
 // Проверить все ли валидируется.
-// Переписать пути.
 
 

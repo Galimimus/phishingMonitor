@@ -1,5 +1,6 @@
 package com.galimimus.phishingmonitor;
 
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.server.HTTPServer;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

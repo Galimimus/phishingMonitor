@@ -26,8 +26,8 @@ import java.util.logging.Level;
 import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 
 public class QRMailing extends Mailing implements Runnable{
-    public QRMailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {
-        super(text, recipients, theme, from_email, from_pass, smtp_server, port);
+    public QRMailing(String text, String recipients, String theme) {
+        super(text, recipients, theme);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class QRMailing extends Mailing implements Runnable{
             Send(emp.getEmail());
             total_sent++;
         }
-        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getID(), total_sent);
+        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
         db.connect();
         db.logMailing(mailing);
         db.close();
@@ -90,7 +90,7 @@ public class QRMailing extends Mailing implements Runnable{
             multipart.addBodyPart(mbp);
 
             mbp = new MimeBodyPart();
-            QR_gen(URL_BASE+URL_TOKEN_PART+createToken(emp.getIP(), emp.getDepartment().getID())+URL_MAIL_PART+mailing_id);
+            QR_gen(URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
             FileDataSource fds = new FileDataSource("qrcode/qrcode.png");
             mbp.setDataHandler(new DataHandler(fds));
             mbp.setHeader("Content-ID","<qr>");

@@ -10,6 +10,7 @@ module com.galimimus.phishingmonitor {
     requires mysql.connector.j;
     requires jdk.httpserver;
     requires org.yaml.snakeyaml;
+    requires static lombok;
 
 
     opens com.galimimus.phishingmonitor to javafx.fxml;

