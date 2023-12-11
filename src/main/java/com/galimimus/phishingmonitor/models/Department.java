@@ -1,10 +1,13 @@
 package com.galimimus.phishingmonitor.models;
 
+import lombok.Getter;
+
+@Getter
 public class Department {
     int id;
     String name;
 
-    Department(int id, String name){
+    public Department(int id, String name){
         this.id = id;
         this.name = name;
     }
@@ -12,7 +15,4 @@ public class Department {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
 }

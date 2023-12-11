@@ -1,21 +1,35 @@
 package com.galimimus.phishingmonitor.models;
 
-import java.util.ArrayList;
+import lombok.Getter;
+
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
+@Getter
+public class LastMailing{
 
-public class LastMailing extends Mailing{
+    int id;
+    Timestamp timeOfUse;
+    String usedIp;
+    int mailingId;
 
-    private HashMap<String, Calendar> used_ips;
-
-    LastMailing(ArrayList<Employee> recipients, String mailing_name) {
-        super(recipients, mailing_name);
+    public LastMailing(int id, Timestamp timeOfUse, String usedIp, int mailingId){
+        this.id = id;
+        this.timeOfUse = timeOfUse;
+        this.usedIp = usedIp;
+        this.mailingId = mailingId;
     }
 
-    public void add_toUsed_ips(String ip){
-        String new_ip = ip.replaceAll(" ", "");
+    public LastMailing(Timestamp timeOfUse, String usedIp){
+        this.timeOfUse = timeOfUse;
+        this.usedIp = usedIp;
+    }
 
-        used_ips.put(ip, Calendar.getInstance());
+    public LastMailing(String ip) {
+        usedIp = ip;
+    }
+    public LastMailing(int mailingId) {
+        this.mailingId = mailingId;
     }
 
 }

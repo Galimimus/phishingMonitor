@@ -1,5 +1,6 @@
 package com.galimimus.phishingmonitor.mailings;
 
+import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.models.Employee;
 
 import javax.mail.BodyPart;
@@ -15,47 +16,53 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;import java.io.File;
+import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.logging.Level;
 
-import javax.sql.DataSource;
-import java.io.*;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.galimimus.phishingmonitor.helpers.Validation.createToken;
 
 public class QRMailing extends Mailing implements Runnable{
-    public QRMailing(String text, String recipients, String theme, String from_email, String from_pass, String smtp_server, int port) {
-        super(text, recipients, theme, from_email, from_pass, smtp_server, port);
+    public QRMailing(String text, String recipients, String theme) {
+        super(text, recipients, theme);
     }
 
     @Override
     public void run() {
-        System.out.println("mailing started");//TODO: Запись инфы в бд и файл лога
+        log.logp(Level.INFO, "QRMailing", "run", "Starting qr mailing");
+        DB db = new DB();
+        db.connect();
+        mailing_id = db.getLastMailingId();
+        mailing_id++;
+        db.close();
+        int total_sent = 0;
         for (Employee emp : employees){
             PrepareMail(emp);
-            System.out.println(emp.getEmail());
             try {
                 System.out.println("Thread sleeps");
                 Thread.sleep(15);
                 System.out.println("Thread awake");
             } catch (InterruptedException e) {
+                log.logp(Level.SEVERE, "QRMailing", "run", e.toString());
                 throw new RuntimeException(e);
             }
-
-
-            Send(emp.getEmail());
-            System.out.println("mailing continuing");
+            Send(emp.getEmail(), emp.getIp());
+            total_sent++;
         }
-        System.out.println("mailing done");
+        if (!employees.isEmpty()) {
+            com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
+            db.connect();
+            db.logMailing(mailing);
+            db.close();
+        }else {
+            log.logp(Level.INFO, "QRMailing", "run", "Employees empty set");
+
+        }
+        log.logp(Level.INFO, "QRMailing", "run", "Qr mailing done. Total messages sent = " + total_sent);
     }
 
     public static void QR_gen(String content){
@@ -68,10 +75,9 @@ public class QRMailing extends Mailing implements Runnable{
 
             Path filePath = Paths.get(fileName);
             MatrixToImageWriter.writeToPath(bitMatrix, "PNG", filePath);
-        } catch (WriterException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (WriterException | IOException e) {
+            log.logp(Level.SEVERE, "QRMailing", "QR_gen", e.toString());
+            throw new RuntimeException(e);
         }
     }
 
@@ -90,7 +96,7 @@ public class QRMailing extends Mailing implements Runnable{
             multipart.addBodyPart(mbp);
 
             mbp = new MimeBodyPart();
-            QR_gen(url_base+createToken(emp.getIP()));
+            QR_gen(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
             FileDataSource fds = new FileDataSource("qrcode/qrcode.png");
             mbp.setDataHandler(new DataHandler(fds));
             mbp.setHeader("Content-ID","<qr>");
@@ -103,8 +109,9 @@ public class QRMailing extends Mailing implements Runnable{
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(emp.getEmail()));
 
         } catch (MessagingException e) {
+            log.logp(Level.SEVERE, "QRMailing", "PrepareMail", e.toString());
             throw new RuntimeException(e);
         }
-        System.out.println("Preparing done");
+        log.logp(Level.INFO, "QRMailing", "PrepareMail", "Preparing mail for " + emp.getEmail() + " done.");
     }
 }

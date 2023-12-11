@@ -1,7 +1,11 @@
 package com.galimimus.phishingmonitor.models;
 
 import javafx.scene.image.Image;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class User {
     private Image img;
     private String name;
@@ -19,35 +23,4 @@ public class User {
         this.name = name;
     }
 
-    public Image getImg() {
-        return img;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setImg(Image img) {
-        this.img = img;
-    }
 }

@@ -1,5 +1,8 @@
 package com.galimimus.phishingmonitor.models;
 
+import lombok.Getter;
+
+@Getter
 public class Employee {
     int id;
     String name;
@@ -58,7 +61,7 @@ public class Employee {
         this.ip = ip;
         this.email = email;
     }
-    Employee(String name, String ip, String email){
+    public Employee(String name, String ip, String email){
         //TODO: проверить данные перед присвоением, как минимум ip
         this.name = name;
         this.ip = ip;
@@ -75,27 +78,10 @@ public class Employee {
         this.ip = ip;
     }
 
-    public String getName() {
-        return name;
+    public Employee(String ip, String email, Department department) {
+        this.email = email;
+        this.ip = ip;
+        this.department = department;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Department getDepartment() {
-        return department;
-    }
-
-    public String getIP() {
-        return ip;
-    }
-
-    public int getRaiting() {
-        return raiting;
-    }
 }
