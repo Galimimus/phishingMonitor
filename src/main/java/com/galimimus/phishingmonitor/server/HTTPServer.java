@@ -2,7 +2,6 @@ package com.galimimus.phishingmonitor.server;
 import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -18,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.galimimus.phishingmonitor.helpers.Validation.validateToken;
+import static com.galimimus.phishingmonitor.logic.Statistic.countEmployeeRaiting;
 
 public class HTTPServer {
     private static boolean IS_ACTIVE = false;
@@ -25,7 +25,7 @@ public class HTTPServer {
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
     static SettingsSingleton ss = SettingsSingleton.getInstance();
 
-    public void startHttpServer() {
+    public static void startHttpServer() {
         try {
             if (!IS_ACTIVE) {
                 server = HttpServer.create(new InetSocketAddress(ss.getHTTP_SERVER_HOST(),ss.getHTTP_SERVER_PORT()), 0);
@@ -47,7 +47,7 @@ public class HTTPServer {
         }
     }
 
-    public void stopHttpServer() {
+    public static void stopHttpServer() {
         try {
             if (IS_ACTIVE) {
                 server.stop(10);
@@ -90,8 +90,9 @@ public class HTTPServer {
                     DB db = new DB();
                     db.connect();
                     db.logLastMailing(ip, Integer.parseInt(args[1]));
-                    db.IncrementTotalUsed(Integer.parseInt(args[1]));
+                    db.IncrementTotalUsed(Integer.parseInt(args[1]), ip);
                     db.close();
+                    countEmployeeRaiting(ip);
                 } else {
                     log.logp(Level.SEVERE, "Handler", "handle", "Token не совпадает ни с одним ip." +
                             "token = " + args[0] + " mailing_id = " + args[1]);

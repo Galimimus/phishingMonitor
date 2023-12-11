@@ -2,7 +2,6 @@ package com.galimimus.phishingmonitor.mailings;
 
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.EXEGenerator;
-import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.models.Employee;
 
 import javax.mail.Message;
@@ -10,6 +9,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -39,7 +39,7 @@ public class EXEMailing extends Mailing implements Runnable{
 
     for (Employee emp : employees){
     String filename = "Document_"+Calendar.getInstance().getTimeInMillis();//+"\u202excod.exe";//docx
-    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
+    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
     PrepareMail(emp, filename);
 
     try {
@@ -48,20 +48,25 @@ public class EXEMailing extends Mailing implements Runnable{
         log.logp(Level.SEVERE, "EXEMailing", "run", e.toString());
         throw new RuntimeException(e);
     }
-    Send(emp.getEmail());
+    Send(emp.getEmail(), emp.getIp());
     total_sent++;
     }
-    com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
+    if(!employees.isEmpty()) {
+        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
         db.connect();
         db.logMailing(mailing);
         db.close();
+    }else{
+        log.logp(Level.INFO, "EXEMailing", "run", "Employees empty set");
+
+    }
         log.logp(Level.INFO, "EXEMailing", "run", "Exe mailing done. Total messages sent = " + total_sent);
 }
 
     private void PrepareMail(Employee emp, String filename){
         session = Session.getDefaultInstance(props);
         message = new MimeMessage(session);
-        Pattern pattern = Pattern.compile("<a href=");
+        Pattern pattern = Pattern.compile("<a href=\"");
         Matcher matcher = pattern.matcher(text);
         String tmp_text = text;
         while (matcher.find()) {

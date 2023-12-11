@@ -18,6 +18,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -49,13 +50,18 @@ public class QRMailing extends Mailing implements Runnable{
                 log.logp(Level.SEVERE, "QRMailing", "run", e.toString());
                 throw new RuntimeException(e);
             }
-            Send(emp.getEmail());
+            Send(emp.getEmail(), emp.getIp());
             total_sent++;
         }
-        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
-        db.connect();
-        db.logMailing(mailing);
-        db.close();
+        if (!employees.isEmpty()) {
+            com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
+            db.connect();
+            db.logMailing(mailing);
+            db.close();
+        }else {
+            log.logp(Level.INFO, "QRMailing", "run", "Employees empty set");
+
+        }
         log.logp(Level.INFO, "QRMailing", "run", "Qr mailing done. Total messages sent = " + total_sent);
     }
 
@@ -90,7 +96,7 @@ public class QRMailing extends Mailing implements Runnable{
             multipart.addBodyPart(mbp);
 
             mbp = new MimeBodyPart();
-            QR_gen(URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
+            QR_gen(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
             FileDataSource fds = new FileDataSource("qrcode/qrcode.png");
             mbp.setDataHandler(new DataHandler(fds));
             mbp.setHeader("Content-ID","<qr>");

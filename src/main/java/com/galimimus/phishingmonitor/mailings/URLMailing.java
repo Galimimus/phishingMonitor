@@ -1,6 +1,5 @@
 package com.galimimus.phishingmonitor.mailings;
 
-import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.models.Employee;
 
@@ -9,8 +8,8 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,13 +38,18 @@ public class URLMailing extends Mailing implements Runnable{
                 log.logp(Level.SEVERE, "URLMailing", "run", e.toString());
                 throw new RuntimeException(e);
             }
-            Send(emp.getEmail());
+            Send(emp.getEmail(), emp.getIp());
             total_sent++;
         }
-        com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
-        db.connect();
-        db.logMailing(mailing);
-        db.close();
+        if (!employees.isEmpty()) {
+            com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
+            db.connect();
+            db.logMailing(mailing);
+            db.close();
+        }else {
+            log.logp(Level.INFO, "URLMailing", "run", "Employees empty set");
+
+        }
         log.logp(Level.INFO, "URLMailing", "run", "Url mailing done. Total messages sent = " + total_sent);
     }
 
@@ -57,7 +61,7 @@ public class URLMailing extends Mailing implements Runnable{
         String tmp_text = text;
         while (matcher.find()) {
             StringBuilder sb = new StringBuilder(text);
-            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+createToken(emp.getIp(), emp.getDepartment().getId())+URL_MAIL_PART+mailing_id);
+            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
             tmp_text = String.valueOf(sb);
         }
         try {

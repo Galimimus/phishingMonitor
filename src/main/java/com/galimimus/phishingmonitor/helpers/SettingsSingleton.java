@@ -68,9 +68,6 @@ public class SettingsSingleton {
             }
 
             input.close();
-        } catch (FileNotFoundException e) {
-            log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
-            throw new RuntimeException(e);
         } catch (Exception e) {
             log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
             throw new RuntimeException(e);

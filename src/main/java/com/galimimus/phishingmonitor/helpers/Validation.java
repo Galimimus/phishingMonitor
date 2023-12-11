@@ -4,9 +4,9 @@ import com.galimimus.phishingmonitor.StartApplication;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.security.*;
 
@@ -35,7 +35,7 @@ public class Validation {
         }
         String hashed_ip = token.substring(0,16);
         String dep_id = token.substring(17);
-        log.logp(Level.INFO, "Validation", "validateToken", "Incorrect token value, token = " + "Start process token value, hashed_ip = " + hashed_ip+ " dep = "+dep_id);
+        log.logp(Level.INFO, "Validation", "validateToken", "Start process token value, hashed_ip = " + hashed_ip+ " dep = "+dep_id);
 
         DB db = new DB();
         db.connect();
@@ -54,13 +54,14 @@ public class Validation {
 
             byte[] bytesHash;
             bytesHash = ip.getBytes(StandardCharsets.UTF_8);
+            System.out.println(Arrays.toString(md.digest(bytesHash))+" "+new String(md.digest(bytesHash)) + " "+hashed_ip + token);
 
             if (new String(md.digest(bytesHash)).equals(hashed_ip)) {
-                log.logp(Level.INFO, "Validation", "validateToken", "Token " + token + " validated. ip = " + ip);
+                log.logp(Level.INFO, "Validation", "validateToken", "Token " + hashed_ip + " validated. ip = " + ip);
                 return ip;
             }
         }
-        log.logp(Level.WARNING, "Validation", "validateToken", "Token " + token + " is not validated.");
+        log.logp(Level.WARNING, "Validation", "validateToken", "Token " + hashed_ip + " is not validated.");
         return null;
     }
 
