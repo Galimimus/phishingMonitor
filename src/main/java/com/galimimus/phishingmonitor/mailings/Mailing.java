@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.mail.Session;
 
 import static com.galimimus.phishingmonitor.logic.Statistic.countEmployeeRaiting;
 
@@ -24,7 +23,7 @@ public class Mailing{
     protected final String theme;
     protected final String host;
     protected final int port;
-    SettingsSingleton ss = SettingsSingleton.getInstance();
+    final SettingsSingleton ss = SettingsSingleton.getInstance();
     protected final String URL_BASE = "http://"+ss.getHTTP_SERVER_HOST()+":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_URL_HANDLE()+"?";
     protected final String URL_DOWNLOAD = "http://"+ss.getHTTP_SERVER_HOST()+":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_EXE_HANDLE()+"?file=";
     protected final String URL_TOKEN_PART = "token=";

@@ -96,7 +96,7 @@ public class QRMailing extends Mailing implements Runnable{
             multipart.addBodyPart(mbp);
 
             mbp = new MimeBodyPart();
-            QR_gen(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
+            QR_gen(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_16)+URL_MAIL_PART+mailing_id);
             FileDataSource fds = new FileDataSource("qrcode/qrcode.png");
             mbp.setDataHandler(new DataHandler(fds));
             mbp.setHeader("Content-ID","<qr>");

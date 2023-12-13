@@ -1,6 +1,5 @@
 package com.galimimus.phishingmonitor;
 
-import com.galimimus.phishingmonitor.controllers.NewDepartmentController;
 import com.galimimus.phishingmonitor.controllers.NewEmployeeController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -16,7 +15,7 @@ public class NewEmployeeModal {
     public static void newWindow(){
         FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("newEmployee.fxml"));
         Stage empStage = new Stage();
-        Scene scene = null;
+        Scene scene;
         empStage.initModality(Modality.APPLICATION_MODAL);
         try {
             scene = new Scene(fxmlLoader.load(), 400, 450);

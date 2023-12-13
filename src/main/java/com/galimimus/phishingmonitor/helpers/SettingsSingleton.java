@@ -5,7 +5,6 @@ import com.galimimus.phishingmonitor.StartApplication;
 import org.yaml.snakeyaml.Yaml;
 import lombok.*;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
@@ -28,6 +27,9 @@ public class SettingsSingleton {
     private String MAIL_SMTP_SERVER;
     private Integer MAIL_SMTP_PORT;
     private String MINGW_COMMAND;
+    private String RAR_COMMAND;
+    private String CP_COMMAND;
+
 
     private SettingsSingleton() {
         loadSettingsFromYamlFile(Paths.get("settings.yaml").toAbsolutePath().normalize().toString());
@@ -61,6 +63,8 @@ public class SettingsSingleton {
                 MAIL_SMTP_SERVER = (String)data.get("MAIL_SMTP_SERVER");
                 MAIL_SMTP_PORT = (Integer) data.get("MAIL_SMTP_PORT");
                 MINGW_COMMAND = (String)data.get("MINGW_COMMAND");
+                RAR_COMMAND = (String)data.get("RAR_COMMAND");
+                CP_COMMAND = (String)data.get("CP_COMMAND");
             }else {
                 log.logp(Level.WARNING, "SettingsSingleton",
                         "loadSettingsFromYamlFile", "File settings.yaml not found. path = " + filePath);

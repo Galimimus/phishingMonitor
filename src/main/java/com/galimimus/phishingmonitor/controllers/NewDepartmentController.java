@@ -3,8 +3,6 @@ package com.galimimus.phishingmonitor.controllers;
 import com.galimimus.phishingmonitor.StartApplication;
 import com.galimimus.phishingmonitor.helpers.Validation;
 import com.galimimus.phishingmonitor.helpers.DB;
-import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

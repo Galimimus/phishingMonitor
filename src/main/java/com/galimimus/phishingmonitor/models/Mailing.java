@@ -4,7 +4,6 @@ import lombok.Getter;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Date;
 
 @Getter
 public class Mailing {
@@ -22,10 +21,6 @@ public class Mailing {
         this.total_sent = total_sent;
 
     }
-    public Mailing(int id, Timestamp time){
-        this.id = id;
-        this.time = time;
-    }
 
 
     public Mailing(int id, Timestamp time, int dep_id, int total_sent, int total_used) {
@@ -36,7 +31,4 @@ public class Mailing {
         this.total_used = total_used;
     }
 
-    public Mailing(int id) {
-        this.id = id;
-    }
 }

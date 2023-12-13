@@ -11,9 +11,6 @@ import com.galimimus.phishingmonitor.mailings.EXEMailing;
 import com.galimimus.phishingmonitor.mailings.QRMailing;
 import com.galimimus.phishingmonitor.mailings.URLMailing;
 import com.galimimus.phishingmonitor.models.*;
-import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.chart.*;
@@ -22,24 +19,15 @@ import javafx.scene.layout.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
+
 
 import static com.galimimus.phishingmonitor.logic.Statistic.*;
 
@@ -48,16 +36,13 @@ public class MainPageController {
 
     @FXML
     private HBox Content;
-    AnchorPane HelpContent = new AnchorPane();
+    final AnchorPane HelpContent = new AnchorPane();
     final DB db = new DB();
-    static final Logger log = Logger.getLogger(StartApplication.class.getName());
+    //static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
 
     @FXML
     protected void MeOnClick(){
-        //TODO: скрыть пароль при выводе, добавить кнопку, которая позволяет увидеть
-        //TODO: ПКМ по textarea - редактировать?                        | сделать действия на клик по textarea
-        //TODO: кнопки для запуска/остановки/рестарта сервака, ПКМ??    | потом
         Content.getChildren().clear();
         db.connect();
         User user = db.getMe(1);
@@ -76,7 +61,9 @@ public class MainPageController {
                 +":"+ss.getHTTP_SERVER_PORT()+"/"+ss.getHTTP_SERVER_EXE_HANDLE());
         TextArea mail_info = new TextArea("Особенности рассылок:\nemail from: " + ss.getUSER_EMAIL() +
                 "\npassword for application: " + ss.getUSER_APP_PASS() + "\nsmtp server: " + ss.getMAIL_SMTP_SERVER() +
-                "\nsmtp port: " + ss.getMAIL_SMTP_PORT() + "\nmingw compiler command for operating system: " + ss.getMINGW_COMMAND());
+                "\nsmtp port: " + ss.getMAIL_SMTP_PORT() + "\nmingw compiler command for operating system: " + ss.getMINGW_COMMAND()
+                + "\nrar archiver command for operating system: " + ss.getRAR_COMMAND()
+                + "\ncp (copy files) command for operating system: " + ss.getCP_COMMAND());
         Image img;
         img = new Image(Objects.requireNonNull(StartApplication.class.getResourceAsStream("default_person.jpg")));
 
@@ -190,7 +177,7 @@ public class MainPageController {
         sp.setContent(left);
         sp.setMaxWidth(200);
 
-        ArrayList<Mailing> mailings = new ArrayList<>();
+        ArrayList<Mailing> mailings;
         DB db = new DB();
         db.connect();
         mailings = db.getMailings();
@@ -201,7 +188,7 @@ public class MainPageController {
                     btn.setId("mlng" + mailing.getId());
                     btn.setText("От: " + mailing.getTime());
                     btn.setOnAction(actionEvent -> {
-                        ArrayList<LastMailing> lastMailings = new ArrayList<>();
+                        ArrayList<LastMailing> lastMailings;
 
                         db.connect();
                         lastMailings = db.getLastMailing(Integer.parseInt(btn.getId().substring(4)));
@@ -275,16 +262,13 @@ public class MainPageController {
         NumberAxis yAxis = new NumberAxis();
 
         yAxis.setLabel("Рейтинг");
-        BarChart<Number, String> second = new BarChart<Number, String>(yAxis, xAxis);
+        BarChart<Number, String> second = new BarChart<>(yAxis, xAxis);
 
-        XYChart.Series<Number, String> dataSeries1 = new XYChart.Series<Number, String>();
+        XYChart.Series<Number, String> dataSeries1 = new XYChart.Series<>();
         dataSeries1.setName("Рейтинг");
 
         HashMap<String, Integer> mailingsRait = countMailingsRaiting();
-        mailingsRait.forEach((date, rait)->{
-            dataSeries1.getData().add(new XYChart.Data<Number, String>(rait, date));
-
-        });
+        mailingsRait.forEach((date, rait)-> dataSeries1.getData().add(new XYChart.Data<>(rait, date)));
         second.getData().add(dataSeries1);
 
         second.setTitle("Рейтинг рассылок в динамике");
@@ -586,3 +570,7 @@ public class MainPageController {
         }
 }
 
+//TODO:
+// 1. регистрация пользователя
+// 2. рейтинг внутри круга смещен
+// 3. настроить нормальный размер кнопки внутри аккордеона 
