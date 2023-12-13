@@ -6,10 +6,6 @@ import java.util.HashMap;
 
 
 public class Statistic {
-    //TODO:
-    // 2. вычисление рейтинга компании.
-    // 3. вычисление рейтинга прошедшей рассылки.
-    // 4.
     public static void countEmployeeRaiting(String ip){
 
         DB db= new DB();
