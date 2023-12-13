@@ -1,22 +1,16 @@
 package com.galimimus.phishingmonitor.logic;
 
 import com.galimimus.phishingmonitor.helpers.DB;
-import com.galimimus.phishingmonitor.models.Department;
-import com.galimimus.phishingmonitor.models.Employee;
-import com.galimimus.phishingmonitor.models.LastMailing;
-import com.galimimus.phishingmonitor.models.Mailing;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
 
 public class Statistic {
     //TODO:
     // 2. вычисление рейтинга компании.
     // 3. вычисление рейтинга прошедшей рассылки.
     // 4.
-    public static int countEmployeeRaiting(String ip){
+    public static void countEmployeeRaiting(String ip){
 
         DB db= new DB();
         db.connect();
@@ -31,11 +25,11 @@ public class Statistic {
         db.close();
 
 
-        return raiting;
+        //return raiting;
     }
 
     public static int countCompanyRaiting(){
-        int raiting = 0;
+        int raiting;
         DB db = new DB();
         db.connect();
         raiting = db.getAverageEmpRaiting();
@@ -44,7 +38,7 @@ public class Statistic {
     }
 
     public static int countLastMailingRaiting(){
-        int raiting = 0;
+        int raiting;
         DB db = new DB();
         db.connect();
         raiting = db.getLastMailingRaiting();
@@ -52,7 +46,7 @@ public class Statistic {
         return raiting;
     }
     public static HashMap<String, Integer> countMailingsRaiting(){
-        HashMap<String, Integer> raiting = new HashMap<>();
+        HashMap<String, Integer> raiting;
         DB db = new DB();
         db.connect();
         raiting = db.getMailingsRaiting();
@@ -60,7 +54,7 @@ public class Statistic {
         return raiting;
     }
     public static HashMap<String, Integer> countDepsRaiting(){
-        HashMap<String, Integer> raiting = new HashMap<>();
+        HashMap<String, Integer> raiting;
         DB db = new DB();
         db.connect();
         raiting = db.getDepsRaiting();

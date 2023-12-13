@@ -39,7 +39,8 @@ public class EXEMailing extends Mailing implements Runnable{
 
     for (Employee emp : employees){
     String filename = "Document_"+Calendar.getInstance().getTimeInMillis();//+"\u202excod.exe";//docx
-    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
+    exe_gen.EXE_gen(filename, URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_16)+URL_MAIL_PART+mailing_id);
+        //System.out.println(URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
     PrepareMail(emp, filename);
 
     try {

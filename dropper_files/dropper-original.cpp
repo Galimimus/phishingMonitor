@@ -4,22 +4,14 @@
 #endif
 
 int main() {
-    #if _WIN32
+/*    #if _WIN32
     WNDCLASSEX wcex;
     wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    #endif
+    #endif*/
+    //setlocale(LC_ALL, "en_US.UTF-8");
 
-    std::string URL_DOWNLOAD = "curl ";
-    int returnCode = system(URL_DOWNLOAD.c_str());
+    const char* x = "/C curl ";
+    ShellExecute(0, "open", "cmd.exe", x, 0, SW_HIDE);
 
-    if (returnCode == 0) {
-        int returnCode = system("echo return code = 0");
-    }
-    else {
-
-        int returnCode = system("echo return code = non-zero, execution failed");
-
-    }
-
-    return 0;;
+    return 0;
 }

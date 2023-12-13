@@ -53,8 +53,9 @@ public class Validation {
         for (String ip : ips) {
 
             byte[] bytesHash;
-            bytesHash = ip.getBytes(StandardCharsets.UTF_8);
+            bytesHash = ip.getBytes(StandardCharsets.UTF_16);
             System.out.println(Arrays.toString(md.digest(bytesHash))+" "+new String(md.digest(bytesHash)) + " "+hashed_ip + token);
+
 
             if (new String(md.digest(bytesHash)).equals(hashed_ip)) {
                 log.logp(Level.INFO, "Validation", "validateToken", "Token " + hashed_ip + " validated. ip = " + ip);
@@ -73,7 +74,9 @@ public class Validation {
             log.logp(Level.SEVERE, "Validation", "createToken", e.toString());
             throw new RuntimeException(e);
         }
-        byte[] bytesOfMessage = ip.getBytes(StandardCharsets.UTF_8);
+        byte[] bytesOfMessage = ip.getBytes(StandardCharsets.UTF_16);
+        System.out.println(ip+" "+dep);
+        System.out.println(new String(md.digest(bytesOfMessage))+"_"+dep);
         return new String(md.digest(bytesOfMessage))+"_"+dep;
     }
 }

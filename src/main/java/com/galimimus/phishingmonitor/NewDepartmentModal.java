@@ -16,7 +16,7 @@ public class NewDepartmentModal {
     public static void newWindow() {
         FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("newDepartment.fxml"));
         Stage depStage = new Stage();
-        Scene scene = null;
+        Scene scene;
         depStage.initModality(Modality.APPLICATION_MODAL);
         try {
             scene = new Scene(fxmlLoader.load(), 500, 110);

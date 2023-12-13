@@ -61,7 +61,7 @@ public class URLMailing extends Mailing implements Runnable{
         String tmp_text = text;
         while (matcher.find()) {
             StringBuilder sb = new StringBuilder(text);
-            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_8)+URL_MAIL_PART+mailing_id);
+            sb.insert(matcher.end(),URL_BASE+URL_TOKEN_PART+java.net.URLEncoder.encode(createToken(emp.getIp(), emp.getDepartment().getId()), StandardCharsets.UTF_16)+URL_MAIL_PART+mailing_id);
             tmp_text = String.valueOf(sb);
         }
         try {
