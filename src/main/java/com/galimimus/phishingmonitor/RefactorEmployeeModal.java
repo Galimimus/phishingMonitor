@@ -1,6 +1,6 @@
 package com.galimimus.phishingmonitor;
 
-import com.galimimus.phishingmonitor.controllers.NewEmployeeController;
+import com.galimimus.phishingmonitor.controllers.RefEmployeeController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -10,24 +10,22 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NewEmployeeModal {
+public class RefactorEmployeeModal {
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
-    public static void newWindow(int depId){
-        FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("newEmployee.fxml"));
+    public static void newWindow() {
+        FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("refactorEmployee.fxml"));
         Stage empStage = new Stage();
         Scene scene;
-        empStage.initModality(Modality.APPLICATION_MODAL);
+        empStage.initModality(Modality.NONE);
         try {
             scene = new Scene(fxmlLoader.load(), 400, 450);
         } catch (IOException e) {
-            log.logp(Level.SEVERE, "NewEmployeeModal", "newWindow", e.toString());
+            log.logp(Level.SEVERE, "RefactorEmployeeModal", "newWindow", e.toString());
             throw new RuntimeException(e);
         }
-        empStage.setTitle("Add new employee");
+        empStage.setTitle("Refactor employee");
         empStage.setScene(scene);
-        NewEmployeeController.setDepId(depId);
-        NewEmployeeController.setStage(empStage);
+        RefEmployeeController.setStage(empStage);
         empStage.showAndWait();
-
     }
 }

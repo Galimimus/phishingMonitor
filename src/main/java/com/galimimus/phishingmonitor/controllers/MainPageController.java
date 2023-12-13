@@ -1,9 +1,7 @@
 
 package com.galimimus.phishingmonitor.controllers;
 
-import com.galimimus.phishingmonitor.NewDepartmentModal;
-import com.galimimus.phishingmonitor.NewEmployeeModal;
-import com.galimimus.phishingmonitor.StartApplication;
+import com.galimimus.phishingmonitor.*;
 import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.helpers.SettingsSingleton;
 import com.galimimus.phishingmonitor.helpers.Validation;
@@ -11,10 +9,13 @@ import com.galimimus.phishingmonitor.mailings.EXEMailing;
 import com.galimimus.phishingmonitor.mailings.QRMailing;
 import com.galimimus.phishingmonitor.mailings.URLMailing;
 import com.galimimus.phishingmonitor.models.*;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,10 +24,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 
 import static com.galimimus.phishingmonitor.logic.Statistic.*;
@@ -64,6 +62,32 @@ public class MainPageController {
                 "\nsmtp port: " + ss.getMAIL_SMTP_PORT() + "\nmingw compiler command for operating system: " + ss.getMINGW_COMMAND()
                 + "\nrar archiver command for operating system: " + ss.getRAR_COMMAND()
                 + "\ncp (copy files) command for operating system: " + ss.getCP_COMMAND());
+
+        bd_info.setDisable(true);
+/*        bd_info.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                if(t.getButton() == MouseButton.SECONDARY) {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Confirmation Dialog");
+                    alert.setHeaderText("Look, a Confirmation Dialog");
+                    alert.setContentText("Are you ok with this?");
+
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.get() == ButtonType.OK){
+
+                        //bd_info.setDisable(false);
+                        // ... user chose OK
+                    } else {
+                        // ... user chose CANCEL or closed the dialog
+                    }
+                    //cm.show(table, t.getScreenX(), t.getScreenY());
+                }
+            }
+        });*/
+        server_info.setDisable(true);
+        mail_info.setDisable(true);
+
         Image img;
         img = new Image(Objects.requireNonNull(StartApplication.class.getResourceAsStream("default_person.jpg")));
 
@@ -90,22 +114,7 @@ public class MainPageController {
         AnchorPane.setTopAnchor(work_dir, 60d);
         AnchorPane.setLeftAnchor(work_dir, 300d);
 
-        //bd_info.setPrefSize(300, 150);
-/*        AnchorPane.setTopAnchor(bd_info, 150d);
-        AnchorPane.setLeftAnchor(bd_info, 40d);
-        AnchorPane.setRightAnchor(bd_info, 40d);
-
-
-        //server_info.setPrefSize(400, 150);
-        AnchorPane.setTopAnchor(server_info, 350d);
-        AnchorPane.setRightAnchor(server_info, 40d);
-        AnchorPane.setLeftAnchor(server_info, 40d);
-
-
-        AnchorPane.setTopAnchor(mail_info, 550d);
-        AnchorPane.setRightAnchor(mail_info, 40d);
-        AnchorPane.setLeftAnchor(mail_info, 40d);*/
-        AnchorPane HelpContent = new AnchorPane();
+        HelpContent.getChildren().clear();
 
         VBox vBox = new VBox();
         VBox.setVgrow(HelpContent, Priority.ALWAYS);
@@ -128,30 +137,81 @@ public class MainPageController {
     protected void EmployeesOnClick(){
         Content.getChildren().clear();
         db.connect();
-        HashMap<String, ArrayList<Employee>> departments = db.getEmployees();
+        LinkedHashMap<Department, ArrayList<Employee>> departments = db.getEmployees();
         db.close();
         VBox menuDeps = new VBox();
         Button addDep = new Button("Добавить");
         addDep.setMinWidth(200d);
         Accordion menu = new Accordion();
         addDep.setOnAction(actionEvent -> NewDepartmentModal.newWindow());
-        for(Map.Entry<String, ArrayList<Employee>> department : departments.entrySet()){
+        for(Map.Entry<Department, ArrayList<Employee>> department : departments.entrySet()){
             VBox p_content = new VBox();
             p_content.setMinWidth(150d);
 
-            TitledPane pane = new TitledPane(department.getKey(), p_content);
+            TitledPane pane = new TitledPane(department.getKey().getName(), p_content);
+            pane.setId("dep"+department.getKey().getId());
             Button addEmp = new Button("Добавить");
             addEmp.setMinWidth(p_content.getMinWidth());
-            addEmp.setOnAction(actionEvent -> NewEmployeeModal.newWindow());
+            addEmp.setOnAction(actionEvent -> NewEmployeeModal.newWindow(department.getKey().getId()));
             p_content.getChildren().add(addEmp);
+
             for(Employee emp : department.getValue()){
                 Button btn = new Button(emp.getName());
                 btn.setId("emp"+emp.getId());
                 btn.setMinWidth(p_content.getMinWidth());
                 btn.setOnAction(actionEvent -> EmployeeInfoOnClick(btn.getId()));
+                ContextMenu context = new ContextMenu();
+                MenuItem itemDelete = new MenuItem("Удалить");
+                itemDelete.setOnAction(actionEvent -> {
+                    db.connect();
+                    db.DeleteEmployee(Integer.parseInt(btn.getId().substring(3)));
+                    db.close();
+                });
+                MenuItem itemRefactor = new MenuItem("Редактировать");
+                itemRefactor.setOnAction(actionEvent -> {
+                    RefactorEmployeeModal.newWindow();
+                });
+                context.getItems().add(itemDelete);
+                context.getItems().add(itemRefactor);
+                btn.setContextMenu(context);
+               /* btn.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent t) {
+                        if(t.getButton() == MouseButton.SECONDARY) {
+                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                            alert.setTitle("Confirmation Dialog");
+                            alert.setHeaderText("Look, a Confirmation Dialog");
+                            alert.setContentText("Are you ok with this?");
+
+                            Optional<ButtonType> result = alert.showAndWait();
+                            if (result.get() == ButtonType.OK){
+
+                                //bd_info.setDisable(false);
+                                // ... user chose OK
+                            } else {
+                                // ... user chose CANCEL or closed the dialog
+                            }
+                            //cm.show(table, t.getScreenX(), t.getScreenY());
+                        }
+                    }
+                });*/
                 p_content.getChildren().add(btn);
 
             }
+            ContextMenu context = new ContextMenu();
+            MenuItem itemDelete = new MenuItem("Удалить");
+            itemDelete.setOnAction(actionEvent -> {
+                db.connect();
+                db.DeleteDepartment(Integer.parseInt(pane.getId().substring(3)));
+                db.close();
+            });
+            MenuItem itemRefactor = new MenuItem("Редактировать");
+            itemRefactor.setOnAction(actionEvent -> {
+                RefactorDepartmentModal.newWindow(Integer.parseInt(pane.getId().substring(3)));
+            });
+            context.getItems().add(itemDelete);
+            context.getItems().add(itemRefactor);
+            pane.setContextMenu(context);
             menu.getPanes().add(pane);
         }
 
@@ -203,6 +263,19 @@ public class MainPageController {
                                 sb.append("Время использования: ").append(lastMailing.getTimeOfUse()).append(" Использованный ip: ").append(lastMailing.getUsedIp()).append("\n"));
                         logs.setText(sb.toString());
                     });
+
+                        ContextMenu context = new ContextMenu();
+                        MenuItem itemDelete = new MenuItem("Удалить");
+                        itemDelete.setOnAction(actionEvent -> {
+                            db.connect();
+                            db.DeleteMailing(Integer.parseInt(btn.getId().substring(4)));
+                            db.close();
+                        });
+
+                        context.getItems().add(itemDelete);
+
+                        btn.setContextMenu(context);
+
                         left.getChildren().add(btn);
 
                 });

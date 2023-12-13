@@ -15,4 +15,7 @@ public class Department {
         this.name = name;
     }
 
+    public Department(int id) {
+        this.id = id;
+    }
 }
