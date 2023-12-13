@@ -6,9 +6,11 @@ import org.yaml.snakeyaml.Yaml;
 import lombok.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.*;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 @Getter
@@ -31,10 +33,8 @@ public class SettingsSingleton {
     private String MINGW_COMMAND;
     private String RAR_COMMAND;
     private String CP_COMMAND;
-
-
-    private SettingsSingleton() {
-        loadSettingsFromYamlFile(Paths.get("settings.yaml").toAbsolutePath().normalize().toString());
+    private SettingsSingleton(){
+        loadSettingsFromYamlFile(Paths.get("settings.yaml").toString());
     }
 
     private static class SingletonHolder {
@@ -44,10 +44,58 @@ public class SettingsSingleton {
     public static SettingsSingleton getInstance() {
         return SingletonHolder.HOLDER_INSTANCE;
     }
-    public void loadSettingsFromYamlFile(String filePath) {
+    public void loadSettingsFromYamlFile(String fileName) {
+        String home = System.getProperty("user.home");
+        if (home == null) {
+            home = System.getenv("HOME");
+        }
+        Path workingDir = Paths.get(home,"PhishingMonitor");
+        if(!Files.exists(workingDir)){
+            try {
+                Files.createDirectory(workingDir);
+                Path dropperFilesDir = Paths.get(home, "PhishingMonitor", "dropper_files");
+                Files.createDirectory(dropperFilesDir);
+                Files.createDirectory(Paths.get(home,"PhishingMonitor", "dropper_files","dropper_outs"));
+                Files.createDirectory(Paths.get(home,"PhishingMonitor", "dropper_files", "tmp"));
+                Files.createDirectory(Paths.get(home, "PhishingMonitor","files"));
+                Files.createDirectory(Paths.get(home, "PhishingMonitor","qrcode"));
+
+                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("index.html")),
+                        Paths.get(home, "PhishingMonitor","index.html"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("settings.yaml"))
+                        , Paths.get(home, "PhishingMonitor","settings.yaml"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("archive-original.exe"))
+                        , Paths.get(home, "PhishingMonitor","dropper_files", "archive-original.exe"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("dropper-original.cpp"))
+                        , Paths.get(home, "PhishingMonitor","dropper_files", "dropper-original.cpp"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("file.txt"))
+                        , Paths.get(home, "PhishingMonitor","dropper_files", "file.txt"), StandardCopyOption.REPLACE_EXISTING);
+                Files.createFile(Paths.get(home, "PhishingMonitor", "app_log.txt"));
+
+
+            } catch (IOException e) {
+                log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
+                throw new RuntimeException(e);
+            }
+            try {
+                Yaml yaml = new Yaml();
+                Path settingsPath = Paths.get(home,"PhishingMonitor","settings.yaml");
+                FileInputStream input = new FileInputStream(settingsPath.toAbsolutePath().normalize().toString());
+                Map<String, String> data = yaml.load(input);
+                data.put("WORKING_DIRECTORY", workingDir.toAbsolutePath().normalize().toString());
+                System.out.println(data);
+                PrintWriter writer = new PrintWriter(settingsPath.toAbsolutePath().normalize().toFile());
+                yaml.dump(data, writer);
+            }catch (FileNotFoundException e){
+                log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
+                throw new RuntimeException(e);
+            }
+        }
+
+
         try {
             Yaml yaml = new Yaml();
-            FileInputStream input = new FileInputStream(filePath);
+            FileInputStream input = new FileInputStream(Paths.get(home,"PhishingMonitor",fileName).toString());
             Map<String, Object> data = yaml.load(input);
             if (data != null) {
                 WORKING_DIRECTORY = (String) data.get("WORKING_DIRECTORY");
@@ -69,7 +117,7 @@ public class SettingsSingleton {
                 CP_COMMAND = (String)data.get("CP_COMMAND");
             }else {
                 log.logp(Level.WARNING, "SettingsSingleton",
-                        "loadSettingsFromYamlFile", "File settings.yaml not found. path = " + filePath);
+                        "loadSettingsFromYamlFile", "File settings.yaml not found. path = " + fileName);
                 System.exit(404);
             }
 

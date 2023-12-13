@@ -13,8 +13,10 @@ module com.galimimus.phishingmonitor {
     requires static lombok;
 
 
+
     opens com.galimimus.phishingmonitor to javafx.fxml;
     exports com.galimimus.phishingmonitor;
     exports com.galimimus.phishingmonitor.controllers;
     opens com.galimimus.phishingmonitor.controllers to javafx.fxml;
+
 }
