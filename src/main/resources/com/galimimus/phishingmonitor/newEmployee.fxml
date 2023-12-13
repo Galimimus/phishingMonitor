@@ -28,12 +28,12 @@
             <TextField fx:id="email" />
          </children>
       </HBox>
-      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+      <!--<HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
          <children>
             <Label text="Название отдела: " />
             <TextField fx:id="depName" />
          </children>
-      </HBox>
+      </HBox>-->
       <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0">
          <children>
             <Button fx:id="createBtn" mnemonicParsing="false" style="-fx-background-color: #80f080;" onAction="#createBtnOnClick" text="Создать" />

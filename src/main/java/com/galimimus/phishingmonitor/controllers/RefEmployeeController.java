@@ -14,15 +14,14 @@ import lombok.Setter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class NewEmployeeController {
+public class RefEmployeeController {
     public Button cancelBtn;
 
     public TextField name;
     public TextField ip;
     public TextField email;
 
-    @Setter
-    private static int depId;
+    public TextField depName;
     public Button createBtn;
 
     public Label info;
@@ -39,32 +38,32 @@ public class NewEmployeeController {
         String empName = name.getText();
         String empIp = ip.getText();
         String empEmail = email.getText();
-        //String empDepName = depName.getText();
-        if(Validation.isNullOrEmpty(empName) || Validation.isNullOrEmpty(empIp) || Validation.isNullOrEmpty(empEmail) ){
-            log.logp(Level.WARNING, "NewEmployeeController", "createBtnOnClick", "Не все поля заполнены");
+        String empDepName = depName.getText();
+        if(Validation.isNullOrEmpty(empName) || Validation.isNullOrEmpty(empIp) || Validation.isNullOrEmpty(empEmail) || Validation.isNullOrEmpty(empDepName) ){
+            log.logp(Level.WARNING, "RefEmployeeController", "createBtnOnClick", "Не все поля заполнены");
             info.setText("Не все поля заполнены");
             info.setTextFill(Color.DARKRED);
             return;
         }
-        if(Validation.validateSymbols(empName) || Validation.validateSymbols(empIp) || Validation.validateSymbols(empEmail) ){
-            log.logp(Level.WARNING, "NewEmployeeController", "createBtnOnClick", "Недопустимые символы в введенных данных:" +
-                    " name = "+empName+" ip = "+empIp+" email = "+empEmail);
+        if(Validation.validateSymbols(empName) || Validation.validateSymbols(empIp) || Validation.validateSymbols(empEmail) || Validation.isNullOrEmpty(empDepName)){
+            log.logp(Level.WARNING, "RefEmployeeController", "createBtnOnClick", "Недопустимые символы в введенных данных:" +
+                    " name = "+empName+" ip = "+empIp+" email = "+empEmail+" depName = "+empDepName);
             info.setText("Недопустимые символы в введенных данных.");
             info.setTextFill(Color.DARKRED);
             return;
         }
         DB db = new DB();
         db.connect();
-        int res = db.setEmployee(empName, empIp, empEmail, depId);
+        int res = db.updateEmployee(empName, empIp, empEmail, empDepName);
         db.close();
         if(res==1){
-            info.setText("Сотрудник "+empName+" успешно создан");
+            info.setText("Сотрудник "+empName+" успешно обновлен");
             info.setTextFill(Color.DARKGREEN);
         }else if(res == 2){
             info.setText("Указан несуществующий отдел");
             info.setTextFill(Color.DARKRED);
         }else{
-            info.setText("При создании сотрудника "+empName+" произошла ошибка");
+            info.setText("При обновлении сотрудника "+empName+" произошла ошибка");
             info.setTextFill(Color.DARKRED);
         }
     }

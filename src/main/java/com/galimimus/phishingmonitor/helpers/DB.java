@@ -82,8 +82,8 @@ public class DB {
         }
     }
 
-    public HashMap<String, ArrayList<Employee>> getEmployees() {
-        HashMap<String, ArrayList<Employee>> departments = new HashMap<>();
+    public LinkedHashMap<Department, ArrayList<Employee>> getEmployees() {
+        LinkedHashMap<Department, ArrayList<Employee>> departments = new LinkedHashMap<>();
         try {
             String query = "SELECT * FROM departments";
             if(!connection.isClosed()){
@@ -98,7 +98,7 @@ public class DB {
                         Employee employee = new Employee(result_emp.getInt(1), result_emp.getString(2));
                         employees.add(employee);
                     }
-                    departments.put(result_dep.getString(2), employees);
+                    departments.put(new Department(result_dep.getInt(1),result_dep.getString(2)), employees);
                     log.logp(Level.INFO, "DB", "getEmployees", "getEmployees ended successfully");
                 }
             }else {
@@ -618,25 +618,25 @@ public class DB {
         return 1;
     }
 
-    public int setEmployee(String name, String ip, String email, String depName) {
-        if(Validation.validateSymbols(name) || Validation.validateSymbols(ip) ||Validation.validateSymbols(email) || Validation.validateSymbols(depName)){
-            log.logp(Level.WARNING, "DB", "setEmployee", "Invalid data: name = "+ name+" ip = "+ip+" email = "+ email+" depName = "+depName);
+    public int setEmployee(String name, String ip, String email, int depId) {
+        if(Validation.validateSymbols(name) || Validation.validateSymbols(ip) ||Validation.validateSymbols(email)){
+            log.logp(Level.WARNING, "DB", "setEmployee", "Invalid data: name = "+ name+" ip = "+ip+" email = "+ email);
             return 0;
         }
 
-        String query = "SELECT id FROM departments WHERE name = \""+depName+"\"";
+        //String query = "SELECT id FROM departments WHERE name = \""+depName+"\"";
+        String query = "INSERT INTO employees (name, ip, email, department_id) VALUES (\""+name+"\", \""+ip+"\", \""+email+"\", "+depId+")";
         try {
 
             if(!connection.isClosed()){
-                Statement statement = connection.createStatement();
+/*                Statement statement = connection.createStatement();
                 ResultSet result = statement.executeQuery(query);
                 result.next();
                 if(result.getInt(1) == 0){
                     log.logp(Level.INFO, "DB", "setEmployee", "no department found = " + depName);
                     return 2;
-                }
-                query = "INSERT INTO employees (name, ip, email, department_id) VALUES (\""+name+"\", \""+ip+"\", \""+email+"\", "+result.getInt(1)+")";
-                statement = connection.createStatement();
+                }*/
+                Statement statement = connection.createStatement();
                 int res = statement.executeUpdate(query);
                 log.logp(Level.INFO, "DB", "setEmployee", "result inserting new employee = " + res);
             }else {
@@ -649,6 +649,109 @@ public class DB {
         }
         return 1;
 
+    }
+
+    public void DeleteEmployee(int id) {
+        String query = "DELETE FROM employees WHERE id = "+id;
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                int result = statement.executeUpdate(query);
+                log.logp(Level.INFO, "DB", "DeleteEmployee", "result deleting employee with id = "+id+" is = " + result);
+            }else {
+                log.logp(Level.WARNING, "DB", "DeleteEmployee", "Connection to database is closed");
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB", "DeleteEmployee", e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void DeleteDepartment(int id) {
+        String query = "DELETE FROM departments WHERE id = "+id;
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                int result = statement.executeUpdate(query);
+                log.logp(Level.INFO, "DB", "DeleteDepartment", "result deleting department with id = "+id+" is = " + result);
+            }else {
+                log.logp(Level.WARNING, "DB", "DeleteDepartment", "Connection to database is closed");
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB", "DeleteDepartment", e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int updateEmployee(String name, String ip, String email, String depName) {
+        if(Validation.validateSymbols(name) || Validation.validateSymbols(ip) ||Validation.validateSymbols(email)||Validation.validateSymbols(depName)){
+            log.logp(Level.WARNING, "DB", "updateEmployee", "Invalid data: name = "+ name+" ip = "+ip+" email = "+ email+" depName = "+ depName);
+            return 0;
+        }
+
+        String query = "SELECT id FROM departments WHERE name = \""+depName+"\"";
+        try {
+
+            if(!connection.isClosed()){
+                Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery(query);
+                result.next();
+                if(result.getInt(1) == 0){
+                    log.logp(Level.INFO, "DB", "updateEmployee", "no department found = " + depName);
+                    return 2;
+                }
+                query = "UPDATE employees SET name = \""+name+"\", ip = \""+ip+"\", email = \""+email+"\" WHERE department_id = "+result.getInt(1);
+                statement = connection.createStatement();
+                int res = statement.executeUpdate(query);
+                log.logp(Level.INFO, "DB", "updateEmployee", "result updating employee = " + res);
+            }else {
+                log.logp(Level.WARNING, "DB", "updateEmployee", "Connection to database is closed");
+                return 0;
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB","updateEmployee", e.toString());
+            throw new RuntimeException(e);
+        }
+        return 1;
+    }
+
+    public int updateDepartment(String name, int id) {
+        if(Validation.validateSymbols(name)){
+            log.logp(Level.WARNING, "DB", "updateDepartment", "Invalid name = "+ name);
+            return 0;
+        }
+        String query = "UPDATE departments SET name = \""+name+"\" WHERE id = "+id;
+        try {
+
+            if(!connection.isClosed()){
+                Statement statement = connection.createStatement();
+                int res = statement.executeUpdate(query);
+                log.logp(Level.INFO, "DB", "updateDepartment", "result updating department = " + res);
+            }else {
+                log.logp(Level.WARNING, "DB", "updateDepartment", "Connection to database is closed");
+                return 0;
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB","updateDepartment", e.toString());
+            throw new RuntimeException(e);
+        }
+        return 1;
+    }
+
+    public void DeleteMailing(int id) {
+        String query = "DELETE FROM mailings WHERE id = "+id;
+        try {
+            if (!connection.isClosed()) {
+                Statement statement = connection.createStatement();
+                int result = statement.executeUpdate(query);
+                log.logp(Level.INFO, "DB", "DeleteMailing", "result deleting mailing with id = "+id+" is = " + result);
+            }else {
+                log.logp(Level.WARNING, "DB", "DeleteMailing", "Connection to database is closed");
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB", "DeleteMailing", e.toString());
+            throw new RuntimeException(e);
+        }
     }
 }
 
