@@ -33,17 +33,14 @@ public class MainPageController {
     private HBox Content;
     final AnchorPane HelpContent = new AnchorPane();
     final DB db = new DB();
-    //static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
 
     @FXML
     protected void MeOnClick(){
         Content.getChildren().clear();
-        db.connect();
-        User user = db.getMe(1);
-        db.close();
         SettingsSingleton ss = SettingsSingleton.getInstance();
         Label work_dir = new Label("Working directory:\n " + ss.getWORKING_DIRECTORY());
+        Label SFXPass = new Label("Пароль от сгенерированного SFX-архива:\n 1111 ");
         TextArea bd_info = new TextArea("Особенности подключения к базе данных:\nusername: " + ss.getDB_USERNAME() +
                 "\npassword: " + ss.getDB_PASS() + "\nhost: " + ss.getDB_HOST() + "\ndatabase name: " + ss.getDB_NAME());
 
@@ -60,30 +57,7 @@ public class MainPageController {
                 + "\nrar archiver command for operating system: " + ss.getRAR_COMMAND()
                 + "\ncp (copy files) command for operating system: " + ss.getCP_COMMAND());
 
-        bd_info.setDisable(true);
-/*        bd_info.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent t) {
-                if(t.getButton() == MouseButton.SECONDARY) {
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Confirmation Dialog");
-                    alert.setHeaderText("Look, a Confirmation Dialog");
-                    alert.setContentText("Are you ok with this?");
 
-                    Optional<ButtonType> result = alert.showAndWait();
-                    if (result.get() == ButtonType.OK){
-
-                        //bd_info.setDisable(false);
-                        // ... user chose OK
-                    } else {
-                        // ... user chose CANCEL or closed the dialog
-                    }
-                    //cm.show(table, t.getScreenX(), t.getScreenY());
-                }
-            }
-        });*/
-        server_info.setDisable(true);
-        mail_info.setDisable(true);
 
         Image img;
         img = new Image(Objects.requireNonNull(StartApplication.class.getResourceAsStream("default_person.jpg")));
@@ -96,19 +70,21 @@ public class MainPageController {
         AnchorPane.setLeftAnchor(image, 40d);
 
 
-        Label name = new Label(user.getName());
+        Label name = new Label("Pentester");
         AnchorPane.setTopAnchor(name, 30d);
         AnchorPane.setLeftAnchor(name, 140d);
 
-        Label email = new Label(user.getEmail());
+        Label email = new Label("phish@mail.ru");
         AnchorPane.setTopAnchor(email, 60d);
         AnchorPane.setLeftAnchor(email, 140d);
 
-        Label company = new Label(user.getCompany());
+        Label company = new Label("Phishing Monitor");
         AnchorPane.setTopAnchor(company, 90d);
         AnchorPane.setLeftAnchor(company, 140d);
 
-        AnchorPane.setTopAnchor(work_dir, 60d);
+        AnchorPane.setTopAnchor(SFXPass, 30d);
+        AnchorPane.setLeftAnchor(SFXPass, 300d);
+        AnchorPane.setTopAnchor(work_dir, 90d);
         AnchorPane.setLeftAnchor(work_dir, 300d);
 
         HelpContent.getChildren().clear();
@@ -118,12 +94,15 @@ public class MainPageController {
         VBox.setVgrow(bd_info, Priority.ALWAYS);
         VBox.setVgrow(server_info, Priority.ALWAYS);
         VBox.setVgrow(mail_info, Priority.ALWAYS);
-        vBox.setPadding(new Insets(50,30,50,30));
+        vBox.setPadding(new Insets(40,30,40,30));
+        Content.setSpacing(20);
+        vBox.setSpacing(20);
         HelpContent.getChildren().add(name);
         HelpContent.getChildren().add(email);
         HelpContent.getChildren().add(company);
         HelpContent.getChildren().add(image);
         HelpContent.getChildren().add(work_dir);
+        HelpContent.getChildren().add(SFXPass);
         vBox.getChildren().add(HelpContent);
         vBox.getChildren().add(bd_info);
         vBox.getChildren().add(server_info);
@@ -144,11 +123,14 @@ public class MainPageController {
         for(Map.Entry<Department, ArrayList<Employee>> department : departments.entrySet()){
             VBox p_content = new VBox();
             p_content.setMinWidth(150d);
+            p_content.setMaxWidth(200d);
 
             TitledPane pane = new TitledPane(department.getKey().getName(), p_content);
             pane.setId("dep"+department.getKey().getId());
             Button addEmp = new Button("Добавить");
             addEmp.setMinWidth(p_content.getMinWidth());
+            addEmp.setMaxWidth(p_content.getMaxWidth());
+
             addEmp.setOnAction(actionEvent -> NewEmployeeModal.newWindow(department.getKey().getId()));
             p_content.getChildren().add(addEmp);
 
@@ -156,6 +138,7 @@ public class MainPageController {
                 Button btn = new Button(emp.getName());
                 btn.setId("emp"+emp.getId());
                 btn.setMinWidth(p_content.getMinWidth());
+                btn.setMaxWidth(p_content.getMaxWidth());
                 btn.setOnAction(actionEvent -> EmployeeInfoOnClick(btn.getId()));
                 ContextMenu context = new ContextMenu();
                 MenuItem itemDelete = new MenuItem("Удалить");
@@ -166,32 +149,11 @@ public class MainPageController {
                 });
                 MenuItem itemRefactor = new MenuItem("Редактировать");
                 itemRefactor.setOnAction(actionEvent -> {
-                    RefactorEmployeeModal.newWindow();
+                    RefactorEmployeeModal.newWindow(Integer.parseInt(btn.getId().substring(3)));
                 });
                 context.getItems().add(itemDelete);
                 context.getItems().add(itemRefactor);
                 btn.setContextMenu(context);
-               /* btn.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent t) {
-                        if(t.getButton() == MouseButton.SECONDARY) {
-                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                            alert.setTitle("Confirmation Dialog");
-                            alert.setHeaderText("Look, a Confirmation Dialog");
-                            alert.setContentText("Are you ok with this?");
-
-                            Optional<ButtonType> result = alert.showAndWait();
-                            if (result.get() == ButtonType.OK){
-
-                                //bd_info.setDisable(false);
-                                // ... user chose OK
-                            } else {
-                                // ... user chose CANCEL or closed the dialog
-                            }
-                            //cm.show(table, t.getScreenX(), t.getScreenY());
-                        }
-                    }
-                });*/
                 p_content.getChildren().add(btn);
 
             }
@@ -305,7 +267,6 @@ public class MainPageController {
         VBox companyRaiting = new VBox();
         VBox depsRaiting = new VBox();
         VBox recomends = new VBox();
-        //ScatterChart third = new ScatterChart<>(Axis<x>, Axis<  >);
         Label lblLastMlngRait = new Label("Рейтинг последней рассылки: ");
         Label lblCompRait = new Label("Рейтинг компании: ");
         Label lblDepsRait = new Label("Рейтинги отделов: ");
@@ -319,6 +280,8 @@ public class MainPageController {
         ScrollPane deps = new ScrollPane();
         VBox sp_deps = new VBox();
         ScrollPane recs = new ScrollPane();
+        TextArea recs_links = new TextArea("https://mszn27.ru/node/94211 \n https://vniigaz.gazprom.ru/pamyatka-polzovatelyu-po-antifi \n https://habr.com/ru/companies/searchinform/articles/770700/");
+        recs.setContent(recs_links);
         AnchorPane stat1 = new AnchorPane();
         Label score1 = new Label(String.valueOf(countLastMailingRaiting()));
         score1.setFont(new Font("Arial", 20));
@@ -639,8 +602,3 @@ public class MainPageController {
             Content.getChildren().add(HelpContent);
         }
 }
-
-//TODO:
-// 1. регистрация пользователя
-// 2. рейтинг внутри круга смещен
-// 3. настроить нормальный размер кнопки внутри аккордеона 

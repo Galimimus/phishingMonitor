@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 public class RefactorEmployeeModal {
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
-    public static void newWindow() {
+    public static void newWindow(int id) {
         FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("refactorEmployee.fxml"));
         Stage empStage = new Stage();
         Scene scene;
@@ -25,6 +25,7 @@ public class RefactorEmployeeModal {
         }
         empStage.setTitle("Refactor employee");
         empStage.setScene(scene);
+        RefEmployeeController.setId(id);
         RefEmployeeController.setStage(empStage);
         empStage.showAndWait();
     }

@@ -53,6 +53,7 @@ public class EXEMailing extends Mailing implements Runnable{
     total_sent++;
     }
     if(!employees.isEmpty()) {
+        System.out.println(employees.get(0).getDepartment().getId());
         com.galimimus.phishingmonitor.models.Mailing mailing = new com.galimimus.phishingmonitor.models.Mailing(employees.get(0).getDepartment().getId(), total_sent);
         db.connect();
         db.logMailing(mailing);

