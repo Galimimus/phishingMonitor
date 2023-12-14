@@ -33,6 +33,7 @@ public class SettingsSingleton {
     private String MINGW_COMMAND;
     private String RAR_COMMAND;
     private String CP_COMMAND;
+    private String SFX_PASSWORD;
     private SettingsSingleton(){
         loadSettingsFromYamlFile(Paths.get("settings.yaml").toString());
     }
@@ -50,49 +51,73 @@ public class SettingsSingleton {
             home = System.getenv("HOME");
         }
         Path workingDir = Paths.get(home,"PhishingMonitor");
-        if(!Files.exists(workingDir)){
-            try {
-                Files.createDirectory(workingDir);
-                Path dropperFilesDir = Paths.get(home, "PhishingMonitor", "dropper_files");
-                Files.createDirectory(dropperFilesDir);
-                Files.createDirectory(Paths.get(home,"PhishingMonitor", "dropper_files","dropper_outs"));
-                Files.createDirectory(Paths.get(home,"PhishingMonitor", "dropper_files", "tmp"));
-                Files.createDirectory(Paths.get(home, "PhishingMonitor","files"));
-                Files.createDirectory(Paths.get(home, "PhishingMonitor","qrcode"));
-
-                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("index.html")),
-                        Paths.get(home, "PhishingMonitor","index.html"), StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("settings.yaml"))
-                        , Paths.get(home, "PhishingMonitor","settings.yaml"), StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("archive-original.exe"))
-                        , Paths.get(home, "PhishingMonitor","dropper_files", "archive-original.exe"), StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("dropper-original.cpp"))
-                        , Paths.get(home, "PhishingMonitor","dropper_files", "dropper-original.cpp"), StandardCopyOption.REPLACE_EXISTING);
-                Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("file.txt"))
-                        , Paths.get(home, "PhishingMonitor","dropper_files", "file.txt"), StandardCopyOption.REPLACE_EXISTING);
-                Files.createFile(Paths.get(home, "PhishingMonitor", "app_log.txt"));
-
-
-            } catch (IOException e) {
-                log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
-                throw new RuntimeException(e);
+        try {
+            if(!Files.exists(workingDir)){
+                    Files.createDirectory(workingDir);
             }
-            try {
-                Yaml yaml = new Yaml();
-                Path settingsPath = Paths.get(home,"PhishingMonitor","settings.yaml");
-                FileInputStream input = new FileInputStream(settingsPath.toAbsolutePath().normalize().toString());
-                Map<String, String> data = yaml.load(input);
-                data.put("WORKING_DIRECTORY", workingDir.toAbsolutePath().normalize().toString());
-                System.out.println(data);
-                PrintWriter writer = new PrintWriter(settingsPath.toAbsolutePath().normalize().toFile());
-                yaml.dump(data, writer);
-            }catch (FileNotFoundException e){
-                log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
-                throw new RuntimeException(e);
+            Path dropperFilesDir = Paths.get(home, "PhishingMonitor", "dropper_files");
+            if (!Files.exists(dropperFilesDir)){
+                    Files.createDirectory(dropperFilesDir);
             }
+            Path dropperOutsDir = Paths.get(home,"PhishingMonitor", "dropper_files","dropper_outs");
+            if (!Files.exists(dropperOutsDir)){
+                    Files.createDirectory(dropperOutsDir);
+            }
+            Path dropperTmpDir = Paths.get(home,"PhishingMonitor", "dropper_files", "tmp");
+            if (!Files.exists(dropperTmpDir)){
+                    Files.createDirectory(dropperTmpDir);
+            }
+            Path filesDir = Paths.get(home, "PhishingMonitor","files");
+            if (!Files.exists(filesDir)){
+                    Files.createDirectory(filesDir);
+            }
+            Path qrcodeDir = Paths.get(home, "PhishingMonitor","qrcode");
+            if (!Files.exists(qrcodeDir)){
+                    Files.createDirectory(qrcodeDir);
+            }
+            Path indexFile = Paths.get(home, "PhishingMonitor","index.html");
+            if (!Files.exists(indexFile)){
+                    Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("index.html")),
+                            indexFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Path settingsPath = Paths.get(home, "PhishingMonitor","settings.yaml");
+            if (!Files.exists(settingsPath)){
+                    Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("settings.yaml"))
+                            , settingsPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Path archivePath = Paths.get(home, "PhishingMonitor","dropper_files", "archive-original.exe");
+            if (!Files.exists(archivePath)){
+                    Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("archive-original.exe"))
+                            , archivePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Path dropperPath = Paths.get(home, "PhishingMonitor","dropper_files", "dropper-original.cpp");
+            if (!Files.exists(dropperPath)){
+                    Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("dropper-original.cpp"))
+                            , dropperPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Path filePath = Paths.get(home, "PhishingMonitor","dropper_files", "file.txt");
+            if (!Files.exists(filePath)){
+                    Files.copy(Objects.requireNonNull(StartApplication.class.getResourceAsStream("file.txt"))
+                            , filePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }catch (IOException e){
+            log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
+            throw new RuntimeException(e);
         }
 
-
+        try {
+            Yaml yaml = new Yaml();
+            Path settingsPath = Paths.get(home,"PhishingMonitor","settings.yaml");
+            FileInputStream input = new FileInputStream(settingsPath.toAbsolutePath().normalize().toString());
+            Map<String, String> data = yaml.load(input);
+            data.put("WORKING_DIRECTORY", workingDir.toAbsolutePath().normalize().toString());
+            System.out.println(data);
+            PrintWriter writer = new PrintWriter(settingsPath.toAbsolutePath().normalize().toFile());
+            yaml.dump(data, writer);
+        }catch (FileNotFoundException e){
+            log.logp(Level.SEVERE, "SettingsSingleton", "loadSettingsFromYamlFile", e.toString());
+            throw new RuntimeException(e);
+        }
         try {
             Yaml yaml = new Yaml();
             FileInputStream input = new FileInputStream(Paths.get(home,"PhishingMonitor",fileName).toString());
@@ -115,6 +140,7 @@ public class SettingsSingleton {
                 MINGW_COMMAND = (String)data.get("MINGW_COMMAND");
                 RAR_COMMAND = (String)data.get("RAR_COMMAND");
                 CP_COMMAND = (String)data.get("CP_COMMAND");
+                SFX_PASSWORD = (String)data.get("SFX_PASSWORD");
             }else {
                 log.logp(Level.WARNING, "SettingsSingleton",
                         "loadSettingsFromYamlFile", "File settings.yaml not found. path = " + fileName);

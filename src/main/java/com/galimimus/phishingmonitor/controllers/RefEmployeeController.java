@@ -16,17 +16,19 @@ import java.util.logging.Logger;
 
 public class RefEmployeeController {
     public Button cancelBtn;
+    public Button createBtn;
 
     public TextField name;
     public TextField ip;
     public TextField email;
 
     public TextField depName;
-    public Button createBtn;
 
     public Label info;
     @Setter
     private static Stage stage;
+    @Setter
+    private static int id;
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
     @FXML
@@ -54,7 +56,7 @@ public class RefEmployeeController {
         }
         DB db = new DB();
         db.connect();
-        int res = db.updateEmployee(empName, empIp, empEmail, empDepName);
+        int res = db.updateEmployee(id, empName, empIp, empEmail, empDepName);
         db.close();
         if(res==1){
             info.setText("Сотрудник "+empName+" успешно обновлен");

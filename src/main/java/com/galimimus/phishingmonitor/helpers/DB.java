@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 
 public class DB {
-
+    SettingsSingleton ss = SettingsSingleton.getInstance();
     private final String db_name;
     private final String host;
     private final String username;
@@ -23,7 +23,7 @@ public class DB {
     static final Logger log = Logger.getLogger(StartApplication.class.getName());
 
     public DB(){
-        SettingsSingleton ss = SettingsSingleton.getInstance();
+
         db_name = ss.getDB_NAME();
         host = ss.getDB_HOST();
         username = ss.getDB_USERNAME();
@@ -42,42 +42,56 @@ public class DB {
                 throw new RuntimeException(e);
             }
     }
-
-    public  User getMe(int user_id) {
-        User user = null;
-        try {
-            String query = "SELECT name, email, company FROM users WHERE id = " + user_id;
-            if(!connection.isClosed()){
-                Statement statement = connection.createStatement();
-                ResultSet result = statement.executeQuery(query);
-                while (result.next()) {
-                    String name = result.getString(1);
-                    String email = result.getString("email");
-                    String company = result.getString("company");
-                    user = new User(name, email, company);
-                }
-                if(user != null){
-                    log.logp(Level.INFO, "DB", "getMe", "User exists");
-                }else{
-                    log.logp(Level.INFO, "DB", "getMe", "User does not exist");
-                }
-
-            }else {
-                log.logp(Level.WARNING, "DB", "getMe", "Connection to database is closed");
-            }
-        } catch (SQLException e) {
-            log.logp(Level.SEVERE, "DB","getMe", e.toString());
-            throw new RuntimeException(e);
-        }
-        return user;
-    }
-
     public void close() {
         try {
             connection.close();
             log.logp(Level.INFO, "DB","close", "Connection closed");
         }catch(SQLException e) {
             log.logp(Level.SEVERE, "DB","close", e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void checkDB(){
+
+        try {
+            if (!connection.isClosed()) {
+                connection = datasource.getConnection();
+                Statement statement = connection.createStatement();
+                String checkDeps ="CREATE TABLE IF NOT EXISTS departments ( id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100) NOT NULL UNIQUE )";
+                String checkEmps ="CREATE TABLE IF NOT EXISTS employees ( " +
+                        "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                        "name VARCHAR(512) NOT NULL, " +
+                        "ip VARCHAR(15) NOT NULL UNIQUE, " +
+                        "raiting INT DEFAULT -1 CHECK (raiting > -2) CHECK (raiting < 11), " +
+                        "email VARCHAR(128) NOT NULL, " +
+                        "department_id INT NOT NULL," +
+                        " FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE )";
+                String checkMlngs ="CREATE TABLE IF NOT EXISTS mailings ( " +
+                        "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                        "mailing_time TIMESTAMP NOT NULL, " +
+                        "mailing_dep_id INT NOT NULL," +
+                        " FOREIGN KEY (mailing_dep_id) REFERENCES departments(id) ON DELETE CASCADE, " +
+                        "total_sent INT, " +
+                        "total_used INT )";
+                String checkLstMlng = "CREATE TABLE IF NOT EXISTS last_mailing ( " +
+                        "id INT PRIMARY KEY AUTO_INCREMENT, " +
+                        "time_of_use TIMESTAMP NOT NULL, " +
+                        "used_ip VARCHAR(15) NOT NULL," +
+                        "mailing_id INT," +
+                        " FOREIGN KEY (used_ip) REFERENCES employees(ip) ON DELETE CASCADE, " +
+                        " FOREIGN KEY (mailing_id) REFERENCES mailings(id) ON DELETE CASCADE)";
+                statement.execute(checkDeps);
+                statement.execute(checkEmps);
+                statement.execute(checkMlngs);
+                statement.execute(checkLstMlng);
+                //statement.execute("INSERT INTO departments (id, name) VALUES (0,\"all\")");
+                log.logp(Level.INFO, "DB", "checkDB", "Database checked");
+            }else {
+                log.logp(Level.WARNING, "DB", "checkDB", "Connection to database is closed");
+            }
+        } catch (SQLException e) {
+            log.logp(Level.SEVERE, "DB", "checkDB", e.toString());
             throw new RuntimeException(e);
         }
     }
@@ -147,7 +161,7 @@ public class DB {
                 Statement statement = connection.createStatement();
                 ResultSet result_dep = statement.executeQuery(query);
                 while (result_dep.next()) {
-                    Department department = new Department(result_dep.getString(2));
+                    Department department = new Department(result_dep.getInt(1), result_dep.getString(2));
                     deps.add(department);
                 }
                 log.logp(Level.INFO, "DB", "getDepartments", "getDepartments ended successfully");
@@ -172,7 +186,6 @@ public class DB {
         if(Validation.validateSymbols(recipients)){
             log.logp(Level.WARNING, "DB", "getRecipients", "Recipients contains invalid symbols. resipients = " + recipients);
             return null;
-//TODO: При добавлении в бд предусмотреть проверку на валидность имени
         }
         if (Objects.equals(recipients, "все")){
             query = "SELECT ip, email FROM employees";
@@ -249,7 +262,6 @@ public class DB {
     }
 
     public void logLastMailing(String ip, int mailing_id) {
-        //select 1 from table where id = 1 limit 1
         if(Validation.validateSymbols(ip)){
             log.logp(Level.WARNING, "DB", "logLastMailing", "Invalid ip = "+ ip);
             return;
@@ -272,34 +284,21 @@ public class DB {
         }
     }
 
-/*    public void clearLastMailing() {
-        String query = "DELETE FROM last_mailing";
-        try {
-            if (!connection.isClosed()) {
-                Statement statement = connection.createStatement();
-                int result = statement.executeUpdate(query);
-                log.logp(Level.INFO, "DB", "clearLastMailing", "result clearing last mailing table = " + result);
-            }else {
-                log.logp(Level.WARNING, "DB", "clearLastMailing", "Connection to database is closed");
-            }
-        } catch (SQLException e) {
-            log.logp(Level.SEVERE, "DB", "clearLastMailing", e.toString());
-            throw new RuntimeException(e);
-        }
-    }*/
-
     public void logMailing(Mailing mailing) {
         if(mailing == null){
             log.logp(Level.WARNING, "DB", "logMailing", "Mailing object is null");
             return;
         }
-
+        if(mailing.getDep_id() == 0){
+        ArrayList<Department> departments = getDepartments();
+        departments.forEach(department -> {
         String query = "INSERT INTO mailings (mailing_time, mailing_dep_id, total_sent, total_used) VALUES (TIMESTAMP '"+mailing.getTime()+"', "+
-                mailing.getDep_id()+", "+mailing.getTotal_sent()+", 0)";
+                department.getId()+", "+mailing.getTotal_sent()+", 0)";
 
         try {
             if (!connection.isClosed()) {
                 Statement statement = connection.createStatement();
+                System.out.println(query);
                 int result = statement.executeUpdate(query);
                 log.logp(Level.INFO, "DB", "logMailing", "result inserting mailing = " + result);
             }else {
@@ -308,6 +307,23 @@ public class DB {
         } catch (SQLException e) {
             log.logp(Level.SEVERE, "DB", "logMailing", e.toString());
             throw new RuntimeException(e);
+        }
+        });}else{
+            String query = "INSERT INTO mailings (mailing_time, mailing_dep_id, total_sent, total_used) VALUES (TIMESTAMP '"+mailing.getTime()+"', "+
+                    mailing.getDep_id()+", "+mailing.getTotal_sent()+", 0)";
+
+            try {
+                if (!connection.isClosed()) {
+                    Statement statement = connection.createStatement();
+                    int result = statement.executeUpdate(query);
+                    log.logp(Level.INFO, "DB", "logMailing", "result inserting mailing = " + result);
+                }else {
+                    log.logp(Level.WARNING, "DB", "logMailing", "Connection to database is closed");
+                }
+            } catch (SQLException e) {
+                log.logp(Level.SEVERE, "DB", "logMailing", e.toString());
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -336,14 +352,15 @@ public class DB {
     }
 
     public int getLastMailingId() {
-        String query = "SELECT MAX(id) FROM mailings";
+        String query = "SELECT `AUTO_INCREMENT` FROM  INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"+ss.getDB_NAME()+"' AND TABLE_NAME = 'mailings'";
         int lastID = 0;
         try {
             if (!connection.isClosed()) {
                 Statement statement = connection.createStatement();
                 ResultSet res = statement.executeQuery(query);
-                res.next();
-                lastID = res.getInt(1);
+                while(res.next()) {
+                    lastID = res.getInt(1);
+                }
                 log.logp(Level.INFO, "DB", "getLastMailingId", "getLastMailingId ended successfully");
             }else {
                 log.logp(Level.WARNING, "DB", "getLastMailingId", "Connection to database is closed");
@@ -623,19 +640,10 @@ public class DB {
             log.logp(Level.WARNING, "DB", "setEmployee", "Invalid data: name = "+ name+" ip = "+ip+" email = "+ email);
             return 0;
         }
-
-        //String query = "SELECT id FROM departments WHERE name = \""+depName+"\"";
         String query = "INSERT INTO employees (name, ip, email, department_id) VALUES (\""+name+"\", \""+ip+"\", \""+email+"\", "+depId+")";
         try {
 
             if(!connection.isClosed()){
-/*                Statement statement = connection.createStatement();
-                ResultSet result = statement.executeQuery(query);
-                result.next();
-                if(result.getInt(1) == 0){
-                    log.logp(Level.INFO, "DB", "setEmployee", "no department found = " + depName);
-                    return 2;
-                }*/
                 Statement statement = connection.createStatement();
                 int res = statement.executeUpdate(query);
                 log.logp(Level.INFO, "DB", "setEmployee", "result inserting new employee = " + res);
@@ -683,7 +691,7 @@ public class DB {
         }
     }
 
-    public int updateEmployee(String name, String ip, String email, String depName) {
+    public int updateEmployee(int id, String name, String ip, String email, String depName) {
         if(Validation.validateSymbols(name) || Validation.validateSymbols(ip) ||Validation.validateSymbols(email)||Validation.validateSymbols(depName)){
             log.logp(Level.WARNING, "DB", "updateEmployee", "Invalid data: name = "+ name+" ip = "+ip+" email = "+ email+" depName = "+ depName);
             return 0;
@@ -700,10 +708,13 @@ public class DB {
                     log.logp(Level.INFO, "DB", "updateEmployee", "no department found = " + depName);
                     return 2;
                 }
-                query = "UPDATE employees SET name = \""+name+"\", ip = \""+ip+"\", email = \""+email+"\" WHERE department_id = "+result.getInt(1);
+                query = "UPDATE employees SET name = \""+name+"\", ip = \""+ip+"\", email = \""+email+"\", department_id = "+result.getInt(1)+" WHERE id = "+id;
+                System.out.println(query);
                 statement = connection.createStatement();
                 int res = statement.executeUpdate(query);
+                System.out.println(query);
                 log.logp(Level.INFO, "DB", "updateEmployee", "result updating employee = " + res);
+                return res;
             }else {
                 log.logp(Level.WARNING, "DB", "updateEmployee", "Connection to database is closed");
                 return 0;
@@ -712,7 +723,6 @@ public class DB {
             log.logp(Level.SEVERE, "DB","updateEmployee", e.toString());
             throw new RuntimeException(e);
         }
-        return 1;
     }
 
     public int updateDepartment(String name, int id) {

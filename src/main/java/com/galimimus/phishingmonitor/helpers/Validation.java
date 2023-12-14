@@ -29,12 +29,27 @@ public class Validation {
 
 
     public static String validateToken(String token) {
-        if(validatePattern(token, Pattern.compile(".{16}_\\d+$"))){
+        String hashed_ip;
+        String dep_id;
+        if(!validatePattern(String.format("%s",token), Pattern.compile(".{16}_\\d+$"))){
+            hashed_ip = token.substring(0,16);
+            dep_id = token.substring(17);
+        }else if(!validatePattern(String.format("%s",token), Pattern.compile(".{15}_\\d+$"))){
+            hashed_ip = token.substring(0, 15);
+            dep_id = token.substring(16);
+        }else if(!validatePattern(String.format("%s",token), Pattern.compile(".{14}_\\d+$"))){
+            hashed_ip = token.substring(0, 14);
+            dep_id = token.substring(15);
+        }else if(!validatePattern(String.format("%s",token), Pattern.compile(".{13}_\\d+$"))){
+            hashed_ip = token.substring(0, 13);
+            dep_id = token.substring(14);
+        }else if(!validatePattern(String.format("%s",token), Pattern.compile(".{12}_\\d+$"))){
+            hashed_ip = token.substring(0, 12);
+            dep_id = token.substring(13);
+        }else{
             log.logp(Level.WARNING, "Validation", "validateToken", "Incorrect token value, token = " + token);
             return null;
         }
-        String hashed_ip = token.substring(0,16);
-        String dep_id = token.substring(17);
         log.logp(Level.INFO, "Validation", "validateToken", "Start process token value, hashed_ip = " + hashed_ip+ " dep = "+dep_id);
 
         DB db = new DB();

@@ -28,6 +28,5 @@ public class NewEmployeeModal {
         NewEmployeeController.setDepId(depId);
         NewEmployeeController.setStage(empStage);
         empStage.showAndWait();
-
     }
 }

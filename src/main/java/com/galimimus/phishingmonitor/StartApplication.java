@@ -1,5 +1,6 @@
 package com.galimimus.phishingmonitor;
 
+import com.galimimus.phishingmonitor.helpers.DB;
 import com.galimimus.phishingmonitor.server.HTTPServer;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -26,8 +27,12 @@ public class StartApplication extends Application {
             System.err.println("Could not setup logger configuration: " + e);
         }
 
+        DB db = new DB();
+        db.connect();
+        db.checkDB();
+        db.close();
+
         stage.setOnCloseRequest(windowEvent -> {
-            //HTTPServer.stopHttpServer();
             Platform.exit();
             System.exit(0);
         });
@@ -38,10 +43,3 @@ public class StartApplication extends Application {
         launch();
     }
 }
-//TODO:
-// 1. Autofill department when adding employee.
-// 2. Add remove employee, department, mailing
-// (add link to destroy last_mailing elements when deleting mailing,destroy employees when deleting department).
-// 3. Add refactor setting.
-// 4. Think about installer.
-// 5. Try it on Windows.
